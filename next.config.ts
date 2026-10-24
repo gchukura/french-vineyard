@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   cacheComponents: true,
+  // CLAUDE.md: trailing slashes on all URLs.
+  trailingSlash: true,
   partialPrefetching: true,
   turbopack: {
     rules: {

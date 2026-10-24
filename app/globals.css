@@ -78,3 +78,26 @@ h4 {
   font-family: var(--font-heading);
   font-weight: 600;
 }
+
+/* Returning visitors: the head boot script sets data-consent before paint,
+   so the server-rendered banner never flashes. */
+html[data-consent] .consent-banner {
+  display: none;
+}
+
+/* Keep the fixed consent banner from covering the end of the page. */
+html:not([data-consent]) body {
+  padding-bottom: 10rem;
+}
+@media (min-width: 40rem) {
+  html:not([data-consent]) body {
+    padding-bottom: 5rem;
+  }
+}
+
+.maplibregl-popup-content {
+  background: var(--surface);
+  color: var(--foreground);
+  border-radius: var(--radius-button);
+  font-family: var(--font-sans);
+}

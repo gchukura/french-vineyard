@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+/* `dark:` utilities follow the [data-theme="dark"] attribute on <html>. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Design tokens from CLAUDE.md. Palette values are fixed; semantic roles
+   below are what components should use, and they swap in dark mode. */
+:root {
+  --chalk: #f7f3ec;
+  --parchment: #efe8db;
+  --cellar: #2b2320;
+  --cork: #6b5e54;
+  --bordeaux: #6b1e2b;
+  --vine: #5b6b3a;
+  --gold: #c9a24b;
+  --cellar-night: #1a1512;
+
+  --background: var(--chalk);
+  --surface: var(--parchment);
+  --foreground: var(--cellar);
+  --muted: var(--cork);
+  --primary: var(--bordeaux);
+  --on-primary: var(--chalk);
+  --tag: var(--vine);
+  --accent: var(--gold);
+}
+
+[data-theme="dark"] {
+  --background: var(--cellar-night);
+  --surface: var(--cellar);
+  --foreground: var(--chalk);
+  --muted: #b5a89c;
+  --primary: var(--bordeaux);
+  --on-primary: var(--chalk);
+  --tag: #8a9a63;
+  --accent: var(--gold);
+  color-scheme: dark;
+}
+
+@theme {
+  --color-chalk: #f7f3ec;
+  --color-parchment: #efe8db;
+  --color-cellar: #2b2320;
+  --color-cork: #6b5e54;
+  --color-bordeaux: #6b1e2b;
+  --color-vine: #5b6b3a;
+  --color-gold: #c9a24b;
+  --color-cellar-night: #1a1512;
+
+  --radius-card: 12px;
+  --radius-button: 6px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-tag: var(--tag);
+  --color-accent: var(--accent);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-fraunces), ui-serif, Georgia, serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}

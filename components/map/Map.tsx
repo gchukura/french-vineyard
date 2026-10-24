@@ -7,9 +7,16 @@ import type { MapPin } from "@/components/map/MapCanvas";
 
 export type { MapPin };
 
-// maplibre-gl (and its CSS) is only fetched once the map nears the viewport.
+// maplibre-gl (and its CSS) is only fetched once the map is wanted.
 const MapCanvas = dynamic(() => import("@/components/map/MapCanvas"), { ssr: false });
 
+const INTERACTIONS = ["scroll", "pointerdown", "keydown", "touchstart", "wheel"] as const;
+
+/**
+ * Lazy map: loads when it is near the viewport *and* the visitor has
+ * interacted with the page (or pressed "Show map"). A map in the first
+ * screen therefore never weighs on the initial load.
+ */
 export function Map({
   pins,
   label,
@@ -21,23 +28,28 @@ export function Map({
   className?: string;
 }) {
   const box = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+  const [near, setNear] = useState(false);
+  const [engaged, setEngaged] = useState(false);
+  const show = near && engaged;
 
   useEffect(() => {
     const el = box.current;
-    if (!el) return;
+    if (!el || show) return;
     const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setVisible(true);
-          io.disconnect();
-        }
+      (entries) => entries.some((e) => e.isIntersecting) && setNear(true),
+      {
+        rootMargin: "300px",
       },
-      { rootMargin: "300px" },
     );
     io.observe(el);
-    return () => io.disconnect();
-  }, []);
+    const engage = () => setEngaged(true);
+    for (const type of INTERACTIONS)
+      window.addEventListener(type, engage, { once: true, passive: true });
+    return () => {
+      io.disconnect();
+      for (const type of INTERACTIONS) window.removeEventListener(type, engage);
+    };
+  }, [show]);
 
   return (
     <figure>
@@ -47,12 +59,21 @@ export function Map({
         aria-label={label}
         className={`relative overflow-hidden rounded-card bg-surface ${className}`}
       >
-        {visible ? (
+        {show ? (
           <MapCanvas pins={pins} />
         ) : (
-          <p className="absolute inset-0 grid place-items-center text-sm text-muted">
-            Loading map…
-          </p>
+          <div className="absolute inset-0 grid place-items-center">
+            <button
+              type="button"
+              onClick={() => {
+                setNear(true);
+                setEngaged(true);
+              }}
+              className="min-h-11 rounded-button border border-tag px-4 text-sm font-semibold text-tag hover:bg-tag hover:text-chalk"
+            >
+              Show map
+            </button>
+          </div>
         )}
       </div>
       {/* The places as text, for screen readers and anyone without WebGL. */}

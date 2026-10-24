@@ -52,7 +52,7 @@ export default function MapCanvas({ pins }: { pins: MapPin[] }) {
       container,
       style: mutedMapStyle(theme),
       bounds,
-      fitBoundsOptions: { padding: 48, maxZoom: 11 },
+      fitBoundsOptions: { padding: 48, maxZoom: 14 },
       cooperativeGestures: true,
       attributionControl: { compact: true },
     });

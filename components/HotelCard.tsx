@@ -25,7 +25,14 @@ export type HotelCardHotel = Pick<
   | "image_credit"
 >;
 
-export function HotelCard({ hotel }: { hotel: HotelCardHotel }) {
+export function HotelCard({
+  hotel,
+  slot = "hotel-card",
+}: {
+  hotel: HotelCardHotel;
+  /** Placement name for the Clicks log. */
+  slot?: string;
+}) {
   return (
     <article className={`flex flex-col overflow-hidden ${cardClass}`}>
       <div className="relative">
@@ -61,14 +68,14 @@ export function HotelCard({ hotel }: { hotel: HotelCardHotel }) {
         ) : null}
         <div className="mt-auto pt-5">
           {hotel.booking_hotel_id ? (
-            <ButtonLink href={goHref("booking", hotel.id)} className="w-full">
+            <ButtonLink href={goHref("booking", hotel.id, slot)} className="w-full">
               Check prices
             </ButtonLink>
           ) : null}
           {hotel.expedia_id ? (
             <p className="mt-2 text-center text-sm">
               <SmartLink
-                href={goHref("expedia", hotel.id)}
+                href={goHref("expedia", hotel.id, slot)}
                 className="inline-flex min-h-8 items-center text-primary underline underline-offset-2 dark:text-accent"
               >
                 or compare on Expedia

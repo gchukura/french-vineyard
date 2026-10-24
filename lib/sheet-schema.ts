@@ -14,6 +14,8 @@ export const TABS = [
   "Hotels",
   "Tours",
   "Estates",
+  "Config",
+  "Images",
 ] as const;
 
 export type Tab = (typeof TABS)[number];
@@ -256,6 +258,30 @@ export const estateSchema = z.object({
   status: status.default("published"),
 });
 
+/**
+ * Config: key/value rows for site copy that is not tied to a region or town,
+ * e.g. home_stats_json, home_faq_json, about_mdx, privacy_policy_mdx.
+ */
+export const configSchema = z.object({
+  key: text,
+  value: optionalText,
+  updated_at: optionalText,
+  // Config has no status column; every row is live.
+  status: status.default("published"),
+});
+
+/** Images: one row per image used on the site, for /image-credits/. */
+export const imageSchema = z.object({
+  url: text,
+  alt: optionalText,
+  credit: optionalText,
+  license: optionalText,
+  source_url: optionalText,
+  is_ai: bool,
+  used_on: optionalText,
+  status: status.default("published"),
+});
+
 export type Region = z.infer<typeof regionSchema>;
 export type SubRegion = z.infer<typeof subRegionSchema>;
 export type Town = z.infer<typeof townSchema>;
@@ -263,6 +289,8 @@ export type Article = z.infer<typeof articleSchema>;
 export type Hotel = z.infer<typeof hotelSchema>;
 export type Tour = z.infer<typeof tourSchema>;
 export type Estate = z.infer<typeof estateSchema>;
+export type ConfigRow = z.infer<typeof configSchema>;
+export type ImageRow = z.infer<typeof imageSchema>;
 export type Faq = Town["faq_json"];
 
 // ---------------------------------------------------------------------------

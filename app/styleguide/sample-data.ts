@@ -3,7 +3,7 @@ import type { Fact } from "@/components/FactStrip";
 import type { HotelCardHotel } from "@/components/HotelCard";
 import type { MapPin } from "@/components/map/Map";
 import type { TourCardTour } from "@/components/TourCard";
-import type { FaqItem } from "@/lib/jsonld";
+import type { FaqItem } from "@/lib/schema";
 
 /**
  * Fixture data for /styleguide only. These are not real tours or hotels and
@@ -34,21 +34,21 @@ export const sampleFacts: [Fact, Fact, Fact, Fact] = [
 
 export const sampleCards: CardProps[] = [
   {
-    href: "/champagne/epernay/",
+    href: "/towns/epernay/",
     title: "Épernay",
     eyebrow: "Town guide",
     description: "The Avenue de Champagne and the houses along it.",
     image: { src: img("card-1"), alt: "" },
   },
   {
-    href: "/champagne/reims/",
+    href: "/towns/reims/",
     title: "Reims",
     eyebrow: "Town guide",
     description: "Cathedral city with cellars carved into chalk.",
     image: { src: img("card-2"), alt: "" },
   },
   {
-    href: "/champagne/hautvillers/",
+    href: "/towns/hautvillers/",
     title: "Hautvillers",
     eyebrow: "Village",
     description: "A hilltop village above the Marne valley.",
@@ -171,7 +171,7 @@ export const sampleFaq: FaqItem[] = [
 export const sampleCrumbs = [
   { name: "Home", href: "/" },
   { name: "Wine Regions", href: "/regions/" },
-  { name: "Champagne", href: "/champagne/" },
+  { name: "Champagne", href: "/regions/champagne/" },
 ];
 
 export const samplePins: MapPin[] = [
@@ -180,10 +180,10 @@ export const samplePins: MapPin[] = [
     name: "Reims",
     lat: 49.2583,
     lng: 4.0317,
-    href: "/champagne/reims/",
+    href: "/towns/reims/",
     description: "Cathedral city",
   },
-  { id: "epernay", name: "Épernay", lat: 49.0431, lng: 3.9559, href: "/champagne/epernay/" },
+  { id: "epernay", name: "Épernay", lat: 49.0431, lng: 3.9559, href: "/towns/epernay/" },
   { id: "hautvillers", name: "Hautvillers", lat: 49.0806, lng: 3.9439 },
   { id: "ay", name: "Aÿ", lat: 49.0547, lng: 4.0036 },
 ];

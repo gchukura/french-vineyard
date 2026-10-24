@@ -28,4 +28,7 @@ Hotels: id, name, town_slug, tier (budget|mid|luxury), booking_hotel_id, expedia
 Tours (hand-curated by the owner): id, provider (gyg|viator|winalist), provider_id, provider_url, region_slug, town_slug, category, rank, badge, best_for (AI-written), why_picked (AI-written), title, price_from_eur, duration, rating, review_count, bullets_json, image, featured, status, last_checked
 Tours_Inbox: url, added_at, processed
 Estates: id, name, town_slug, appellation, visits (walk-in|booking|appointment), tasting_fee_eur, languages, website, winalist_id
-Queue, Facts, Images, Queries, Clicks, Config: pipeline tabs described in /pipeline/README.md
+Config: key, value, updated_at (site copy: home_stats_json, home_faq_json, home_title, home_description, home_h1, home_standfirst, home_hero_image, about_mdx, contact_mdx, privacy_policy_mdx, legal_notice_mdx, image_credits_mdx)
+Images: url, alt, credit, license, source_url, is_ai, used_on (drives /image-credits/ and alt text)
+Clicks: ts, provider, id, page, slot (write-only; appended by the Apps Script doPost, never read by the site)
+Queue, Facts, Queries: pipeline tabs described in /pipeline/README.md

@@ -12,6 +12,10 @@ describe("goHref", () => {
     expect(goHref("viator", " a b/c ")).toBe("/go/viator/a%20b%2Fc/");
   });
 
+  it("adds an optional slot query", () => {
+    expect(goHref("gyg", "t1", "tour-card")).toBe("/go/gyg/t1/?slot=tour-card");
+  });
+
   it("rejects a blank id", () => {
     expect(() => goHref("expedia", "  ")).toThrow(/needs an id/);
   });

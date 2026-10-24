@@ -12,9 +12,27 @@
  * Edits are debounced: at most one POST per minute, carrying every tab
  * tag edited since the last POST. Tag rule matches lib/sheet-schema.ts
  * sheetTag(): "sheet-" + tab name lowercased.
+ *
+ * Click log (optional): the site's Sheet credentials are read-only, so
+ * /go/ POSTs each click here and doPost appends it to the Clicks tab.
+ *   1. Script Properties: CLICKS_SECRET, a random string.
+ *   2. Deploy → New deployment → Web app, execute as me, access "Anyone".
+ *   3. On the site: CLICKS_WEBHOOK_URL = the web app URL,
+ *      CLICKS_WEBHOOK_SECRET = the same CLICKS_SECRET.
  */
 
-const SITE_TABS = ["Regions", "SubRegions", "Towns", "Articles", "Hotels", "Tours", "Estates"];
+const SITE_TABS = [
+  "Regions",
+  "SubRegions",
+  "Towns",
+  "Articles",
+  "Hotels",
+  "Tours",
+  "Estates",
+  "Config",
+  "Images",
+];
+const CLICK_COLUMNS = ["ts", "provider", "id", "page", "slot"];
 const DEBOUNCE_MS = 60 * 1000;
 const PENDING_KEY = "pendingTags";
 const LAST_SENT_KEY = "lastSentAt";
@@ -87,4 +105,22 @@ function flushLocked_(props) {
 
 function hasFlushTrigger_() {
   return ScriptApp.getProjectTriggers().some((t) => t.getHandlerFunction() === "flushRevalidation");
+}
+
+/** Web app entry point: appends one click row. Body: { secret, click: { ts, provider, id, page, slot } }. */
+function doPost(e) {
+  const props = PropertiesService.getScriptProperties();
+  let body;
+  try {
+    body = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return ContentService.createTextOutput("bad json");
+  }
+  const secret = props.getProperty("CLICKS_SECRET");
+  if (!secret || body.secret !== secret) return ContentService.createTextOutput("forbidden");
+  const click = body.click || {};
+  SpreadsheetApp.getActive()
+    .getSheetByName("Clicks")
+    .appendRow(CLICK_COLUMNS.map((c) => String(click[c] || "").slice(0, 200)));
+  return ContentService.createTextOutput("ok");
 }

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { readFile } from "node:fs/promises";
+
 import { GoogleSpreadsheet } from "google-spreadsheet";
 import { JWT } from "google-auth-library";
 import { cacheLife, cacheTag } from "next/cache";
@@ -8,8 +10,10 @@ import { normalizePrivateKey, requireEnv } from "@/lib/env";
 import {
   TABS,
   articleSchema,
+  configSchema,
   estateSchema,
   hotelSchema,
+  imageSchema,
   parseTab,
   regionSchema,
   sheetTag,
@@ -17,8 +21,10 @@ import {
   tourSchema,
   townSchema,
   type Article,
+  type ConfigRow,
   type Estate,
   type Hotel,
+  type ImageRow,
   type LoadOptions,
   type Region,
   type SubRegion,
@@ -29,8 +35,10 @@ import {
 
 export type {
   Article,
+  ConfigRow,
   Estate,
   Hotel,
+  ImageRow,
   LoadOptions,
   Region,
   SubRegion,
@@ -59,6 +67,17 @@ async function fetchAllTabs(): Promise<Record<Tab, unknown[][]>> {
   "use cache";
   cacheLife("max");
   cacheTag(...TABS.map(sheetTag));
+
+  // Local builds and CI can render every route from a JSON fixture
+  // ({ "Regions": [[header...], [row...]], ... }) instead of the live Sheet.
+  const fixture = process.env.SHEET_FIXTURE;
+  if (fixture) {
+    const grids = JSON.parse(await readFile(fixture, "utf8")) as Partial<Record<Tab, unknown[][]>>;
+    return Object.fromEntries(TABS.map((tab) => [tab, grids[tab] ?? []])) as Record<
+      Tab,
+      unknown[][]
+    >;
+  }
 
   const params = new URLSearchParams();
   for (const tab of TABS) params.append("ranges", `'${tab}'`);
@@ -129,4 +148,20 @@ export async function getEstates(options: LoadOptions = {}): Promise<Estate[]> {
   cacheTag(sheetTag("Estates"));
   const all = await fetchAllTabs();
   return parseTab("Estates", all.Estates, estateSchema, options);
+}
+
+export async function getConfigRows(): Promise<ConfigRow[]> {
+  "use cache";
+  cacheLife("max");
+  cacheTag(sheetTag("Config"));
+  const all = await fetchAllTabs();
+  return parseTab("Config", all.Config, configSchema);
+}
+
+export async function getImages(): Promise<ImageRow[]> {
+  "use cache";
+  cacheLife("max");
+  cacheTag(sheetTag("Images"));
+  const all = await fetchAllTabs();
+  return parseTab("Images", all.Images, imageSchema);
 }

@@ -1,9 +1,16 @@
 import type { NextConfig } from "next";
 
+import { isNoindex } from "./lib/noindex";
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
   // CLAUDE.md: trailing slashes on all URLs.
   trailingSlash: true,
+  // Pre-launch: keep every page out of search results (SITE_NOINDEX, docs/DOMAIN.md).
+  async headers() {
+    if (!isNoindex(process.env.SITE_NOINDEX)) return [];
+    return [{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }];
+  },
   partialPrefetching: true,
   experimental: {
     // Tailwind output is small and most visitors arrive fresh from search,

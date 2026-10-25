@@ -1,6 +1,13 @@
 import { extractHeadings, stripRank } from "@/lib/content";
 
-import { componentIds, mdxToText, tableCount, withoutMethodology, wordCount } from "./mdx";
+import {
+  componentIds,
+  mdxToText,
+  tableCount,
+  withoutMethodology,
+  withoutTables,
+  wordCount,
+} from "./mdx";
 import { unmatchedNumbers } from "./numbers";
 import type { Template } from "./template";
 
@@ -80,10 +87,35 @@ const META_LANGUAGE = [
   /\bun(?:confirmed|verified)\b/i,
   /\b(?:not|never|n['’]t)\s+(?:been\s+|yet\s+)?(?:confirmed|verified|found|published|stated|listed)\b/i,
   /\bno\s+(?:\S+\s+){0,6}?(?:was|were|is|are)\s+(?:confirmed|verified|found|published|given|stated)\b/i,
-  /\b(?:the|our|these|available|official)\s+sources?\b/i,
-  /\bsources?\s+(?:checked|consulted|for this|give|gives|say|says|state|states|list|lists|found|differ)\b/i,
+  // Counted or plural "sources" and "one source", but not "the source of the grapes".
+  /\b(?:the|our|these|some|several|many|most|other|two|both|available|official)\s+sources\b/i,
+  /\b(?:one|another|a single)\s+source\b/i,
+  /\bsources?\s+(?:checked|consulted|for this|give|gives|say|says|state|states|list|lists|found|differ|disagree|suggest|suggests|report|reports)\b/i,
+  // Where a fact was found, instead of the fact.
+  /\breportedly\b/i,
+  /\baccording to\b/i,
+  /\b(?:is|are|was|were)\s+(?:described|presented|billed)\s+(?:as|by)\b/i,
+  /\b(?:the|its|their|this)\s+(?:\d{4}\s+)?listings?\s+(?:shows?|says|states|gives|lists|describes|mentions)\b/i,
+  /\blists?\b[^.!?\n]{0,80}\bon\s+(?:the|its|their|a)\b[^.!?\n]{0,50}\b(?:page|website|site|listing)\b/i,
+  /\b(?:page|website|site|listing|brochure)\s+(?:says|states|lists|shows|describes|mentions|notes)\b/i,
   /\b(?:our|the|this)\s+research\b/i,
   /\b(?:we|I)\s+(?:could not|couldn['’]t|did not|didn['’]t)\s+(?:find|confirm|verify)\b/i,
+];
+
+/** A sentence that sends the reader to someone else for the answer. */
+const CHECK_LINE =
+  /\b(?:ask|check with|confirm with|contact|call|email)\b[^.!?\n]{0,80}\b(?:(?:estate|house|chateau|château|domaine|tourist office|cellar|winery|producer|grower|operator|owner)s?|châteaux)\b|\b(?:check|confirm)\b[^.!?\n]{0,40}\bbefore you (?:go|travel|visit|set out|book)\b/i;
+
+/** Most "ask the estate / check with the tourist office" lines a page may carry. */
+export const MAX_CHECK_LINES = 2;
+
+/** Administrative facts and road trivia that don't help a visitor plan. */
+const TRIVIA = [
+  /\bpopulation\b/i,
+  /\binhabitants\b/i,
+  /\bpost(?:al)?\s?codes?\b/i,
+  /\b(?:canton|arrondissement|sub-?prefecture|prefecture|INSEE)\b/i,
+  /\bRN\s?\d{1,3}\b/,
 ];
 
 /** "9:00", "14:30" without a.m./p.m., and French-style "14h30" (10h and up, so "1h30" durations pass). */
@@ -247,6 +279,30 @@ export function runChecks({
         "no_meta_language",
         around(readable, m.index!, m[0].length),
         "Don't mention sources, research or what wasn't found; leave the fact out or tell the reader to check with the estate or tourist office.",
+      );
+    }
+  }
+
+  // Counted on prose only: table cells and callout titles aren't sentences.
+  const sentences = [mdxToText(withoutTables(body)), faqText]
+    .join("\n")
+    .split(/(?<=[.!?])\s+|\n+/)
+    .filter((x) => CHECK_LINE.test(x));
+  if (sentences.length > MAX_CHECK_LINES) {
+    err(
+      "check_lines",
+      `${sentences.length} lines: ${sentences.map((x) => `"${x.trim().slice(0, 60)}"`).join("; ")}`,
+      `Keep at most ${MAX_CHECK_LINES} "ask the estate / check with the tourist office" lines on the page; cut the rest or state the fact instead.`,
+    );
+  }
+
+  for (const re of TRIVIA) {
+    const m = readable.match(re);
+    if (m) {
+      err(
+        "no_trivia",
+        around(readable, m.index!, m[0].length),
+        "Cut administrative or road trivia that doesn't help a visitor plan the trip.",
       );
     }
   }

@@ -1,11 +1,13 @@
 import type { MetadataRoute } from "next";
 
-import { SITE_URL } from "@/lib/site";
+import { SITE_NOINDEX, SITE_URL } from "@/lib/site";
 
 const NAMED_BOTS = ["Googlebot", "Bingbot", "GPTBot", "ClaudeBot", "PerplexityBot"];
 const DISALLOW = ["/go/", "/api/"];
 
 export default function robots(): MetadataRoute.Robots {
+  // Before launch nothing is crawled; see docs/DOMAIN.md for switching it off.
+  if (SITE_NOINDEX) return { rules: [{ userAgent: "*", disallow: "/" }] };
   return {
     rules: [
       ...NAMED_BOTS.map((userAgent) => ({ userAgent, allow: "/", disallow: DISALLOW })),

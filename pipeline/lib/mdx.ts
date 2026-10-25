@@ -50,3 +50,8 @@ export function wordCount(mdx: string): number {
 export function withoutMethodology(mdx: string): string {
   return mdx.replace(/<MethodologyBox\b[\s\S]*?<\/MethodologyBox>/g, "");
 }
+
+/** The body with every PracticalTable removed (its cells aren't prose). */
+export function withoutTables(mdx: string): string {
+  return mdx.replace(/<PracticalTable\b[^>]*\/>/g, "");
+}

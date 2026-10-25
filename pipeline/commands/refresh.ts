@@ -7,7 +7,7 @@ import { hasUpdatedAt, refreshMonths, TARGET_TAB } from "../lib/targets";
 import { check } from "./check";
 import { draft } from "./draft";
 import { revalidate } from "./publish";
-import { researchRow, saveFacts } from "./research";
+import { researchWithRetry, saveFacts } from "./research";
 
 /**
  * refresh <n>: published rows past refresh_after are researched again. A
@@ -26,7 +26,7 @@ export async function refresh(ctx: Context, max = ctx.args.max): Promise<number>
   const tags = new Set<string>();
   for (const row of due) {
     try {
-      const r = await researchRow(ctx, row);
+      const r = await researchWithRetry(ctx, row);
       if (r.hash !== row.facts_hash) {
         await saveFacts(ctx, row, r);
         await ctx.updateQueue(row, {

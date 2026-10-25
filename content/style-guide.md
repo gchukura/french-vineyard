@@ -25,7 +25,8 @@ Readers are English-speaking travelers planning a few days in a French wine regi
 - **Prices in EUR with USD in parentheses**, rounded to whole units: "€25 ($27)". Use the exchange rate in the brief. Write price ranges as "€20–35 ($22–38)".
 - **Times and durations:** durations as "1 hour 30 minutes" or "90 minutes" in prose, "1h30" only inside tables. Clock times always use the 12-hour clock: "9 a.m.", "2:30 p.m.", "noon", never "14:30" or "14h30", in prose and in tables.
 - **Dates:** "May to September," "from April 1." No ordinals ("1st").
-- **Hedge honestly.** Opening hours and fees change. Say "check before you go" once per article, where it matters most, rather than on every line.
+- **Hedge sparingly.** Opening hours and fees change, but a page full of "ask the estate" is no use to anyone. Use at most two "ask the estate," "check with the tourist office" or "confirm before you go" lines on a page, FAQ included, where they matter most.
+- **No trivia.** Every fact should help the reader plan or enjoy the visit. Leave out administrative facts (population, number of communes, postcodes), road numbers that aren't directions ("Épernay lies on the RN 3"), and history that doesn't change what the reader does.
 
 ## Wine and alcohol
 
@@ -44,12 +45,12 @@ Readers are English-speaking travelers planning a few days in a French wine regi
 ## Links and components
 
 - Internal links use trailing slashes: `/towns/epernay/`.
-- Never paste a raw booking, tour or hotel URL. Tours and hotels appear only through `<TourCards ids="…" />` and `<HotelCards ids="…" />` with ids you are given.
+- Never paste a raw booking, tour or hotel URL. Commercial tours and hotels appear only through `<TourCards ids="…" />` and `<HotelCards ids="…" />` with ids you are given. Official, non-commercial visits (tourist office tours, the Cité du Vin, an estate's own tastings) can be named in prose.
 - Use `<Callout title="…">` for at most one practical tip per article.
 
 ## Write as a guide, not a researcher
 
-Never tell the reader how the page was made. No "not sourced," "unconfirmed," "the sources checked," "according to our research" or "we couldn't find." If something isn't known, leave it out, or send the reader to the people who know: "Ask the estate about fees when you book."
+Never tell the reader how the page was made. No "not sourced," "unconfirmed," "the sources checked," "according to our research" or "we couldn't find." Don't describe where a fact was found: not "one source says," "reportedly," "according to," "the listing shows" or "lists a tasting on the Reims Tourisme page," but the fact itself: "Champagne Guy de Chassey runs a tasting visit." If something isn't known, leave it out, or send the reader to the people who know: "Ask the estate about fees when you book."
 
 ## Before you finish
 

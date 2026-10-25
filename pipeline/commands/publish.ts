@@ -4,12 +4,19 @@ import type { Context } from "../context";
 import type { Draft } from "../lib/checks";
 import { addMonths } from "../lib/dates";
 import type { QueueRow } from "../lib/queue";
-import { contentPatch, refreshMonths, TARGET_TAB } from "../lib/targets";
+import {
+  contentPatch,
+  orderForPublish,
+  refreshMonths,
+  TARGET_TAB,
+  waitsForRegion,
+} from "../lib/targets";
 
 /** POSTs the tags to /api/revalidate. In a dry run, only logs them. */
 export async function revalidate(ctx: Context, tags: string[]): Promise<void> {
   if (!tags.length) return;
-  const url = `${ctx.config.siteUrl}/api/revalidate`;
+  // Trailing slash: the site redirects /api/revalidate to /api/revalidate/ (308).
+  const url = `${ctx.config.siteUrl}/api/revalidate/`;
   if (ctx.args.dryRun) {
     ctx.log(`dry run: would POST ${url} {"tags":${JSON.stringify(tags)}}`);
     return;
@@ -57,14 +64,37 @@ async function publishRow(ctx: Context, row: QueueRow): Promise<string> {
   return sheetTag(tab);
 }
 
-/** publish <n>: checked -> published, then one revalidate call for every touched tab. */
+/** Whether the row's region is published (always true for rows that don't wait on one). */
+async function regionLive(ctx: Context, row: QueueRow): Promise<boolean> {
+  if (!waitsForRegion(row.target)) return true;
+  const region = (await ctx.target(row)).regionSlug;
+  const hit = (await ctx.store.rows("Regions")).find((r) => r.slug === region);
+  return hit?.status?.trim().toLowerCase() === "published";
+}
+
+/**
+ * publish <n>: checked -> published, regions first, then one revalidate call
+ * for every touched tab. Wine areas and towns whose region isn't published
+ * stay checked and are picked up by a later publish; held rows don't count
+ * toward n.
+ */
 export async function publish(ctx: Context, max = ctx.args.max): Promise<number> {
-  const rows = await ctx.rowsAt("checked", max);
+  const rows = orderForPublish(
+    (await ctx.queue()).filter(
+      (r) => r.stage === "checked" && (!ctx.args.only || ctx.args.only.includes(r.id)),
+    ),
+  );
   ctx.log(`publish: ${rows.length} checked row(s)`);
   const tags = new Set<string>();
+  const held: string[] = [];
   let published = 0;
   for (const row of rows) {
+    if (published >= max) break;
     try {
+      if (!(await regionLive(ctx, row))) {
+        held.push(row.id);
+        continue;
+      }
       tags.add(await publishRow(ctx, row));
       published++;
     } catch (error) {
@@ -74,6 +104,11 @@ export async function publish(ctx: Context, max = ctx.args.max): Promise<number>
         error: `publish: ${(error as Error).message}`.slice(0, 1000),
       });
     }
+  }
+  if (held.length) {
+    ctx.log(
+      `publish: ${held.length} held in checked until their region is published: ${held.join(", ")}`,
+    );
   }
   await revalidate(ctx, [...tags]);
   return published;

@@ -7,6 +7,7 @@ import { normalizePrivateKey, requireEnv } from "@/lib/env";
 import { parseTab, type LoadOptions } from "@/lib/sheet-schema";
 import type { z } from "zod";
 
+import { assertPrivateKey } from "./lib/credentials";
 import { FACTS_HEADERS, QUERIES_HEADERS, QUEUE_HEADERS } from "./lib/queue";
 
 /**
@@ -60,13 +61,12 @@ export class SheetStore {
         process.env.PIPELINE_SERVICE_ACCOUNT_EMAIL &&
         process.env.PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY
       );
+    const keyVar = fallback ? "GOOGLE_PRIVATE_KEY" : "PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY";
     const auth = new JWT({
       email: requireEnv(
         fallback ? "GOOGLE_SERVICE_ACCOUNT_EMAIL" : "PIPELINE_SERVICE_ACCOUNT_EMAIL",
       ),
-      key: normalizePrivateKey(
-        requireEnv(fallback ? "GOOGLE_PRIVATE_KEY" : "PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY"),
-      ),
+      key: assertPrivateKey(keyVar, normalizePrivateKey(requireEnv(keyVar))),
       scopes: [
         this.dryRun
           ? "https://www.googleapis.com/auth/spreadsheets.readonly"

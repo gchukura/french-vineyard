@@ -266,7 +266,7 @@ export const configSchema = z.object({
   key: text,
   value: optionalText,
   updated_at: optionalText,
-  // Config has no status column; every row is live.
+  // Rows go live only with status=published (like every tab with a status column).
   status: status.default("published"),
 });
 

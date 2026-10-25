@@ -16,7 +16,7 @@ Colours: chalk #F7F3EC (background), parchment #EFE8DB (surfaces), cellar #2B232
 - Trailing slashes on all URLs; lowercase ASCII slugs; accented names in headings.
 - Every content page renders JSON-LD matching its visible content.
 - Target Lighthouse 95+ mobile. Use next/image with sizes; four fixed widths only.
-- Never read the Google Sheet outside lib/sheets.ts.
+- Never read the Google Sheet outside lib/sheets.ts (site) and pipeline/sheet.ts (pipeline).
 - Write tests for lib/ functions with Vitest. Run `npm run lint && npm run typecheck && npm test` before declaring any task done.
 
 ## Sheet tabs and key columns

@@ -1,0 +1,31 @@
+[
+  {
+    "id": "q-epernay",
+    "target": "towns",
+    "slug": "epernay",
+    "region_slug": "champagne",
+    "target_keyword": "Épernay wine town",
+    "notes": "Town page for the Avenue de Champagne town. Focus on how house visits work and how to get there by train.",
+    "stage": "queued"
+  },
+  {
+    "id": "q-beaune",
+    "target": "towns",
+    "slug": "beaune",
+    "region_slug": "burgundy",
+    "target_keyword": "Beaune wine town",
+    "notes": "Town page. Cover the Hospices de Beaune, cellar visits in town and the Côte de Beaune villages nearby.",
+    "stage": "queued"
+  },
+  {
+    "id": "q-saint-emilion-guide",
+    "target": "articles",
+    "slug": "visiting-saint-emilion",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "town_slug": "saint-emilion",
+    "target_keyword": "visiting Saint-Émilion",
+    "notes": "Day-trip and overnight planning guide from Bordeaux city and from Paris.",
+    "stage": "queued"
+  }
+]

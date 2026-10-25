@@ -39,4 +39,4 @@ Return JSON with:
 - `score`: an integer from 0 to 100,
 - `findings`: one entry per problem, each with `rule` (the rule name above), `severity` (`error` for rules 1–12, `warning` for style), `quote` (the exact text from the draft, under 200 characters) and `fix` (one sentence the writer can act on).
 
-Return an empty `findings` list only if there is nothing to fix.
+List only problems the writer must fix. If you consider something and decide it is fine, leave it out: never include a finding whose fix says no change is needed. Return an empty `findings` list if there is nothing to fix.

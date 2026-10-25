@@ -338,3 +338,10 @@ function around(text: string, index: number, length: number): string {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+/** A model finding whose own fix says nothing needs to change. */
+export function isWithdrawn(f: Finding): boolean {
+  return /\b(?:no (?:change|fix|edit)s? (?:is |are )?needed|nothing to (?:change|fix)|(?:this )?finding is withdrawn|withdraw(?:n)? this|dismiss this(?: one)?|this (?:is acceptable|passes)|is correct, so no)\b/i.test(
+    f.fix,
+  );
+}

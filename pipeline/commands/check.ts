@@ -3,7 +3,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { textOf } from "../claude";
 import type { Context } from "../context";
 import { ESTIMATE_USD } from "../context";
-import { runChecks, type Draft, type Finding } from "../lib/checks";
+import { isWithdrawn, runChecks, type Draft, type Finding } from "../lib/checks";
 import { BudgetExceeded } from "../lib/cost";
 import { allowedNumbers } from "../lib/numbers";
 import { pool } from "../lib/pool";
@@ -30,6 +30,9 @@ function numbersFor(ctx: Context, brief: DraftBrief, h2PerTour: boolean): Set<st
     h2PerTour ? ctx.files.selectionRules : "",
   );
 }
+
+/** Rules runChecks measures exactly; the model's opinion on them is ignored. */
+const AUTOMATED_RULES = new Set(["twelve_hour_times", "word_count", "check_lines"]);
 
 /** Grades one draft: deterministic checks, then the model's grade. */
 export async function gradeDraft(ctx: Context, row: QueueRow, draft: Draft): Promise<CheckResult> {
@@ -72,13 +75,21 @@ export async function gradeDraft(ctx: Context, row: QueueRow, draft: Draft): Pro
   await ctx.recordUsage(row, "check", result);
   const grade = gradeSchema.parse(JSON.parse(textOf(result.message.content)));
 
+  // The model sometimes lists a finding and withdraws it in its own fix text
+  // ("no change is needed"); those aren't problems, so they don't count.
+  // Rules the deterministic checks measure exactly are theirs alone.
+  const modelFindings = grade.findings.filter(
+    (f) => !isWithdrawn(f) && !AUTOMATED_RULES.has(f.rule),
+  );
   const errors = automated.findings.filter((f) => f.severity === "error").length;
+  const modelErrors = modelFindings.filter((f) => f.severity === "error").length;
   const score = Math.max(0, Math.min(100, Math.round(grade.score) - 10 * errors));
-  const passed = grade.pass && errors === 0 && score >= ctx.config.passScore;
+  // Pass is decided by the error findings themselves, not the model's own verdict.
+  const passed = errors === 0 && modelErrors === 0;
   return {
     passed,
-    score,
-    findings: [...automated.findings, ...grade.findings],
+    score: passed ? Math.max(score, ctx.config.passScore) : score,
+    findings: [...automated.findings, ...modelFindings],
     words: automated.wordCount,
   };
 }

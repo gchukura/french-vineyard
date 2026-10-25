@@ -3,8 +3,8 @@ import { sheetTag } from "@/lib/sheet-schema";
 import type { Context } from "../context";
 import type { Draft } from "../lib/checks";
 import { addMonths } from "../lib/dates";
-import { refreshMonths, type QueueRow } from "../lib/queue";
-import { contentPatch } from "./draft";
+import type { QueueRow } from "../lib/queue";
+import { contentPatch, refreshMonths, TARGET_TAB } from "../lib/targets";
 
 /** POSTs the tags to /api/revalidate. In a dry run, only logs them. */
 export async function revalidate(ctx: Context, tags: string[]): Promise<void> {
@@ -34,14 +34,14 @@ async function publishRow(ctx: Context, row: QueueRow): Promise<string> {
   if (!row.draft_json) throw new Error("No draft_json to publish");
   const draft = JSON.parse(row.draft_json) as Draft;
   const template = await ctx.template(row);
-  const tab = row.target === "towns" ? "Towns" : "Articles";
+  const tab = TARGET_TAB[row.target];
   const existing = (await ctx.store.rows(tab)).find((r) => r.slug === row.slug);
   if (!existing) throw new Error(`${tab} has no row with slug ${row.slug}`);
 
   const refreshAfter = addMonths(ctx.today, refreshMonths(row));
   const publishedAt = existing.published_at || row.published_at || ctx.today;
   const patch: Record<string, string> = {
-    ...contentPatch(row, draft, ctx.today, template.schemaType),
+    ...contentPatch(row.target, draft, ctx.today, template.schemaType),
     status: "published",
   };
   if (tab === "Articles")

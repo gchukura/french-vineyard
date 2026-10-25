@@ -1,3 +1,7 @@
+import { TARGETS, type PageTarget } from "./targets";
+
+export { templateName } from "./targets";
+
 /**
  * Page-type templates in content/templates/{page_type}.md. The frontmatter is
  * a few `key: value` lines; list values are separated by "|" because headings
@@ -6,7 +10,7 @@
 
 export type Template = {
   pageType: string;
-  target: "articles" | "towns";
+  target: PageTarget;
   words: { min: number; max: number };
   requiredHeadings: string[];
   requiredComponents: string[];
@@ -32,15 +36,15 @@ export function parseTemplate(pageType: string, source: string): Template {
       .filter(Boolean);
 
   const target = meta.get("target");
-  if (target !== "articles" && target !== "towns") {
-    throw new Error(`Template ${pageType}: target must be "articles" or "towns"`);
+  if (!TARGETS.includes(target as PageTarget)) {
+    throw new Error(`Template ${pageType}: target must be one of ${TARGETS.join(", ")}`);
   }
   const words = (meta.get("words") ?? "").match(/^(\d+)\s*-\s*(\d+)$/);
   if (!words) throw new Error(`Template ${pageType}: words must look like "600-1200"`);
 
   return {
     pageType,
-    target,
+    target: target as PageTarget,
     words: { min: Number(words[1]), max: Number(words[2]) },
     requiredHeadings: list("required_headings"),
     requiredComponents: list("required_components"),
@@ -49,11 +53,4 @@ export function parseTemplate(pageType: string, source: string): Template {
     schemaType: meta.get("schema_type") || undefined,
     body: m[2].trim(),
   };
-}
-
-/** Queue rows that target the Towns tab use the "town" template. */
-export function templateName(target: "articles" | "towns", pageType: string | undefined): string {
-  if (target === "towns") return "town";
-  if (!pageType) throw new Error("Articles rows need a page_type");
-  return pageType;
 }

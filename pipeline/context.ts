@@ -5,11 +5,13 @@ import {
   articleSchema,
   hotelSchema,
   regionSchema,
+  subRegionSchema,
   tourSchema,
   townSchema,
   type Article,
   type Hotel,
   type Region,
+  type SubRegion,
   type Tour,
   type Town,
 } from "@/lib/sheet-schema";
@@ -24,6 +26,7 @@ import type { StoredFactSheet } from "./lib/facts";
 import type { ContentFiles, DraftBrief, Target } from "./lib/prompt";
 import { appendUsage, queueSchema, type QueueRow } from "./lib/queue";
 import { selectHotels, selectTours } from "./lib/selection";
+import { embedsCards, TARGET_TAB } from "./lib/targets";
 import { parseTemplate, templateName, type Template } from "./lib/template";
 import { SheetStore } from "./sheet";
 
@@ -93,6 +96,7 @@ export async function loadContentFiles(): Promise<ContentFiles> {
 
 type SiteRows = {
   regions: Region[];
+  subregions: SubRegion[];
   towns: Town[];
   articles: Article[];
   tours: Tour[];
@@ -198,34 +202,53 @@ export class Context {
   async siteRows(): Promise<SiteRows> {
     if (!this.site) {
       const all = { includeDrafts: true };
-      const [regions, towns, articles, tours, hotels] = await Promise.all([
+      const [regions, subregions, towns, articles, tours, hotels] = await Promise.all([
         this.store.parsed("Regions", regionSchema, all),
+        this.store.parsed("SubRegions", subRegionSchema, all),
         this.store.parsed("Towns", townSchema, all),
         this.store.parsed("Articles", articleSchema, all),
         this.store.parsed("Tours", tourSchema, all),
         this.store.parsed("Hotels", hotelSchema),
       ]);
-      this.site = { regions, towns, articles, tours, hotels };
+      this.site = { regions, subregions, towns, articles, tours, hotels };
     }
     return this.site;
   }
 
   async target(row: QueueRow): Promise<Target> {
-    const { regions, towns } = await this.siteRows();
+    const { regions, subregions, towns } = await this.siteRows();
     const town = towns.find((t) => t.slug === (row.target === "towns" ? row.slug : row.town_slug));
-    const region = regions.find((r) => r.slug === (row.region_slug ?? town?.region_slug));
-    if (row.target === "towns" && !town) throw new Error(`Towns has no row with slug ${row.slug}`);
+    const area =
+      row.target === "subregions" ? subregions.find((s) => s.slug === row.slug) : undefined;
+    const regionSlug =
+      row.target === "regions"
+        ? row.slug
+        : (row.region_slug ?? area?.region_slug ?? town?.region_slug);
+    const region = regions.find((r) => r.slug === regionSlug);
+    const missing =
+      (row.target === "towns" && !town) ||
+      (row.target === "regions" && !region) ||
+      (row.target === "subregions" && !area);
+    if (missing) throw new Error(`${TARGET_TAB[row.target]} has no row with slug ${row.slug}`);
+
     const known: Record<string, unknown> = {};
     if (town) Object.assign(known, { lat: town.lat, lng: town.lng, station: town.station });
     if (region)
       Object.assign(known, {
         region_airport: region.airport,
         region_tgv_from_paris: region.tgv_from_paris,
+        ...(row.target === "regions" ? { lat: region.lat, lng: region.lng } : {}),
       });
+    const names = {
+      towns: town?.name,
+      regions: region?.name,
+      subregions: area?.name,
+      articles: row.target_keyword ?? row.slug.replace(/-/g, " "),
+    };
     return {
       row,
-      name:
-        row.target === "towns" ? town!.name : (row.target_keyword ?? row.slug.replace(/-/g, " ")),
+      name: names[row.target] ?? row.slug,
+      regionSlug,
       regionName: region?.name,
       townName: town?.name,
       known,
@@ -241,15 +264,12 @@ export class Context {
   async brief(row: QueueRow, facts?: StoredFactSheet): Promise<DraftBrief> {
     const site = await this.siteRows();
     const target = await this.target(row);
-    const region = row.region_slug ?? site.towns.find((t) => t.slug === row.slug)?.region_slug;
+    const region = target.regionSlug;
     const town = row.target === "towns" ? row.slug : row.town_slug;
-    // Town pages show tours and hotels from the layout, so their briefs carry none.
-    const tours =
-      row.target === "towns"
-        ? []
-        : selectTours(site.tours, { region, town, category: row.category });
-    const hotels =
-      row.target === "towns" ? [] : selectHotels(site.hotels, site.towns, { region, town });
+    // Place pages show tours and hotels from their own tabs, so their briefs carry none.
+    const cards = embedsCards(row.target);
+    const tours = cards ? selectTours(site.tours, { region, town, category: row.category }) : [];
+    const hotels = cards ? selectHotels(site.hotels, site.towns, { region, town }) : [];
 
     const published = <T extends { status: string }>(xs: T[]) =>
       xs.filter((x) => x.status === "published");

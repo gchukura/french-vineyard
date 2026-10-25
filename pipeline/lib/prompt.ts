@@ -54,16 +54,23 @@ export type Grade = z.infer<typeof gradeSchema>;
 export type Target = {
   row: QueueRow;
   name: string;
+  regionSlug?: string;
   regionName?: string;
   townName?: string;
   /** Values already in the Sheet (coordinates, station), for research to verify. */
   known: Record<string, unknown>;
 };
 
+const PAGE_LABEL = {
+  towns: "town page",
+  regions: "region page",
+  subregions: "wine area page",
+} as const;
+
 export function researchMessages(target: Target) {
   const { row } = target;
   const brief = {
-    page: row.target === "towns" ? "town page" : `${row.page_type} article`,
+    page: row.target === "articles" ? `${row.page_type} article` : PAGE_LABEL[row.target],
     subject: target.name,
     region: target.regionName ?? row.region_slug,
     town: target.townName ?? row.town_slug,
@@ -172,7 +179,7 @@ export type DraftBrief = {
 export function draftUserText(brief: DraftBrief): string {
   const { target, facts, tours, hotels, usdRate, links } = brief;
   const page = {
-    type: target.row.target === "towns" ? "town" : target.row.page_type,
+    type: target.row.target === "articles" ? target.row.page_type : PAGE_LABEL[target.row.target],
     subject: target.name,
     slug: target.row.slug,
     region: target.regionName,

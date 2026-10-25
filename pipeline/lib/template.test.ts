@@ -11,12 +11,14 @@ const dir = new URL("../../content/templates/", import.meta.url);
 describe("content/templates", () => {
   const files = readdirSync(dir).filter((f) => f.endsWith(".md"));
 
-  it("has a template for every Articles page_type plus towns", () => {
+  it("has a template for every Articles page_type plus towns, regions and sub-regions", () => {
     const pageTypes = ["guide", "ranked_list", "hotel_roundup", "itinerary", "practical"];
     for (const p of pageTypes) {
       expect(articleSchema.safeParse({ slug: "a", page_type: p, title: "T" }).success).toBe(true);
     }
-    expect(files.map((f) => f.replace(/\.md$/, "")).sort()).toEqual([...pageTypes, "town"].sort());
+    expect(files.map((f) => f.replace(/\.md$/, "")).sort()).toEqual(
+      [...pageTypes, "town", "region", "subregion"].sort(),
+    );
   });
 
   it.each(files)("%s parses", (file) => {
@@ -45,7 +47,7 @@ describe("parseTemplate", () => {
 
   it("rejects templates without frontmatter or a valid target", () => {
     expect(() => parseTemplate("x", "Body")).toThrow(/frontmatter/);
-    expect(() => parseTemplate("x", "---\ntarget: regions\nwords: 1-2\n---\n")).toThrow(/target/);
+    expect(() => parseTemplate("x", "---\ntarget: places\nwords: 1-2\n---\n")).toThrow(/target/);
   });
 });
 

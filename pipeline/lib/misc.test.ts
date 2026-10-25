@@ -131,8 +131,8 @@ describe("queue", () => {
   });
 
   it("refreshes guides at 6 months and towns at 12", () => {
-    expect(refreshMonths({ target: "articles", page_type: "guide" })).toBe(6);
-    expect(refreshMonths({ target: "towns", page_type: undefined })).toBe(12);
+    expect(refreshMonths({ target: "articles" })).toBe(6);
+    expect(refreshMonths({ target: "towns" })).toBe(12);
   });
 
   it("keeps the last 40 usage entries and survives a corrupt cell", () => {

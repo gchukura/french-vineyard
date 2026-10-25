@@ -9,6 +9,7 @@ import { publish } from "./commands/publish";
 import { refresh } from "./commands/refresh";
 import { research } from "./commands/research";
 import { run } from "./commands/run";
+import { seed } from "./commands/seed";
 import { Context, loadConfig, loadContentFiles } from "./context";
 import { parseArgs } from "./lib/args";
 import type { Draft, Finding } from "./lib/checks";
@@ -51,6 +52,9 @@ async function main() {
         break;
       case "refresh":
         await refresh(ctx);
+        break;
+      case "seed":
+        await seed(ctx);
         break;
       case "run":
         await run(ctx);

@@ -16,7 +16,7 @@ import { researchMessages } from "../lib/prompt";
 import type { QueueRow } from "../lib/queue";
 
 /** Web searches allowed per row; each one adds its results to the call's input tokens. */
-export const MAX_SEARCHES = 6;
+export const MAX_SEARCHES = 8;
 
 export type Research = { facts: StoredFactSheet; dropped: string[]; hash: string };
 

@@ -10,6 +10,7 @@ npm run pipeline -- check 5
 npm run pipeline -- publish 5
 npm run pipeline -- refresh 5            # published rows past refresh_after
 npm run pipeline -- run --max 30         # research, draft, check, publish under one budget
+npm run pipeline -- seed --file pipeline/launch-queue.json   # append Queue rows (skips existing ids)
 
 # Read the Sheet, call the API, write nothing. Drafts land in pipeline/.dry-run/<time>/.
 npm run pipeline -- run --max 3 --dry-run --queue-file pipeline/fixtures/dry-run-queue.json
@@ -21,7 +22,8 @@ Options: `--max <n>` (or a positional `n`), `--dry-run`, `--queue-file <json>` (
 
 - **Sheet access.** The pipeline's only Sheet code is `pipeline/sheet.ts`, using its own write-enabled service account. The site still reads only through `lib/sheets.ts` with the read-only account. Rows are validated with the site's own schemas in `lib/sheet-schema.ts`.
 - **Tours are the owner's.** `draft` filters the owner-curated Tours tab (published rows matching the page's region, town and Queue `category`) in the owner's `rank` order. It never adds, chooses or reorders tours, and `check` rejects any `<TourCards>` id that isn't a published, curated row. A ranked list with no matching tours goes to `needs_review` instead of being drafted.
-- **Sourced facts only.** Research facts must cite a URL that web search actually returned in that run; anything else is dropped (the Facts tab's `dropped_json` lists what). Research gets 6 searches per row, and the domains in `content/research-blocklist.txt` (Rome2rio, Tripadvisor, Wanderlog, booking platforms and similar) are excluded from search and never count as a source. The writer and checker see the fact sheet without its source URLs. Drafts may only use numbers from the fact sheet, tours and hotels; `check` enforces it.
+- **No thin pages.** Before drafting, a fact sheet with fewer than 12 sourced facts, or a town page or guide with no sourced route from Paris, goes straight to `needs_review` with the reason in `findings`; no draft tokens are spent.
+- **Sourced facts only.** Research facts must cite a URL that web search actually returned in that run; anything else is dropped (the Facts tab's `dropped_json` lists what). Research gets 8 searches per row, spent in order: the Paris route and nearest station, then estates and visits, then opening months and prices, and the domains in `content/research-blocklist.txt` (Rome2rio, Tripadvisor, Wanderlog, booking platforms and similar) are excluded from search and never count as a source. The writer and checker see the fact sheet without its source URLs. Drafts may only use numbers from the fact sheet, tours and hotels; `check` enforces it.
 - **Live pages never show unchecked drafts.** Every draft is stored in `Queue.draft_json`. It is also written to the content tab straight away, but only while that row isn't published. `publish` copies the checked draft over, so a refresh of a live page only goes live once it passes.
 - **Dry runs can't write.** `--dry-run` requests a read-only OAuth scope, records every planned write in `writes.json` and skips the revalidate call.
 
@@ -37,10 +39,10 @@ published ──refresh (facts changed)──▶ researched ──▶ … ──
 
 | Command    | Picks rows at                                       | Does                                                                                                                                                                                                                                                                                                     | Moves to                                           |
 | ---------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| `research` | `queued`                                            | Sonnet-class model with web search (6 searches, blocklisted domains excluded) and `content/prompts/research.md`. Writes the fact sheet to Facts.                                                                                                                                                         | `researched`                                       |
+| `research` | `queued`                                            | Sonnet-class model with web search (8 searches, blocklisted domains excluded) and `content/prompts/research.md`. Writes the fact sheet to Facts.                                                                                                                                                         | `researched`                                       |
 | `draft`    | `researched`                                        | Builds the prompt from `prompts/draft.md`, `style-guide.md`, `banned-phrases.txt`, `templates/{page_type}.md` (towns use `town.md`) and the fact sheet. Single streamed calls up to 20 rows, the Message Batches API (half price) above 20. The shared system prompt and the template are prompt-cached. | `drafted`                                          |
 | `check`    | `drafted`                                           | Deterministic checks, then a Haiku-class grade with `prompts/check.md`. Writes `score` and `findings`. On a first fail it redrafts at once with the findings appended (`prompts/redraft.md`) and grades again.                                                                                           | `checked`, or `needs_review` after the second fail |
-| `publish`  | `checked`                                           | Copies the draft to Articles/Towns, sets `status=published`, `published_at`, `refresh_after` (6 months for articles, 12 for towns), then one POST to `/api/revalidate` with the touched tabs' tags (`sheet-articles`, `sheet-towns`).                                                                    | `published`                                        |
+| `publish`  | `checked`                                           | Copies the draft to Articles/Towns, sets `status=published`, `published_at`, `refresh_after` (6 months for articles, 12 for towns, regions and sub-regions), then one POST to `/api/revalidate` with the touched tabs' tags (`sheet-articles`, `sheet-towns`, `sheet-regions`, `sheet-subregions`).      | `published`                                        |
 | `refresh`  | `published` with `refresh_after` on or before today | Re-runs research. If the fact sheet's hash changed: saves it and re-runs draft and check (the next `publish` puts it live). If not: bumps `updated_at` and moves `refresh_after` forward.                                                                                                                | `researched` → … or stays `published`              |
 | `run`      |                                                     | research, draft, check, publish in order, each up to `--max`, under one budget.                                                                                                                                                                                                                          |                                                    |
 
@@ -72,26 +74,26 @@ The pipeline writes to Queue, Facts, Articles and Towns, and reads Regions, Tour
 
 You fill `id`, `target`, `slug` and the page columns; the pipeline fills the rest.
 
-| Column                          | Who      | Meaning                                                                                                          |
-| ------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------- |
-| `id`                            | you      | Unique id, e.g. `q-epernay`.                                                                                     |
-| `target`                        | you      | `articles` or `towns`. Towns rows must already exist in the Towns tab; Articles rows are created on first draft. |
-| `slug`                          | you      | Lowercase ASCII slug of the Articles or Towns row.                                                               |
-| `page_type`                     | you      | Articles only: `guide`, `ranked_list`, `hotel_roundup`, `itinerary` or `practical`.                              |
-| `region_slug`, `town_slug`      | you      | Scope for research, tours and hotels.                                                                            |
-| `category`                      | you      | Optional Tours `category` to filter on (ranked lists).                                                           |
-| `target_keyword`                | you      | Search phrase the page targets; copied to Articles.                                                              |
-| `notes`                         | you      | Editor brief for research and drafting.                                                                          |
-| `stage`                         | both     | See Stages. Blank means `queued`.                                                                                |
-| `attempts`                      | pipeline | Failed checks so far.                                                                                            |
-| `score`, `findings`             | pipeline | Last check score and findings (JSON).                                                                            |
-| `facts_hash`                    | pipeline | Hash of the fact sheet's content (ignores sources and order); `refresh` compares it.                             |
-| `draft_json`                    | pipeline | Latest draft: title, standfirst, meta description, body, FAQ, tour and hotel ids.                                |
-| `published_at`, `refresh_after` | pipeline | Set by publish; Towns have no such columns, so they live here.                                                   |
-| `cost_usd`                      | pipeline | Total API spend on this row.                                                                                     |
-| `usage_json`                    | pipeline | Last 40 calls: stage, model, input/output/cached tokens, searches, USD.                                          |
-| `error`                         | pipeline | Last error message.                                                                                              |
-| `updated_at`                    | pipeline | Last pipeline write.                                                                                             |
+| Column                          | Who      | Meaning                                                                                                                                                        |
+| ------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                            | you      | Unique id, e.g. `q-epernay`.                                                                                                                                   |
+| `target`                        | you      | `articles`, `towns`, `regions` or `subregions`. Towns, Regions and SubRegions rows must already exist in their tabs; Articles rows are created on first draft. |
+| `slug`                          | you      | Lowercase ASCII slug of the Articles or Towns row.                                                                                                             |
+| `page_type`                     | you      | Articles only: `guide`, `ranked_list`, `hotel_roundup`, `itinerary` or `practical`.                                                                            |
+| `region_slug`, `town_slug`      | you      | Scope for research, tours and hotels.                                                                                                                          |
+| `category`                      | you      | Optional Tours `category` to filter on (ranked lists).                                                                                                         |
+| `target_keyword`                | you      | Search phrase the page targets; copied to Articles.                                                                                                            |
+| `notes`                         | you      | Editor brief for research and drafting.                                                                                                                        |
+| `stage`                         | both     | See Stages. Blank means `queued`.                                                                                                                              |
+| `attempts`                      | pipeline | Failed checks so far.                                                                                                                                          |
+| `score`, `findings`             | pipeline | Last check score and findings (JSON).                                                                                                                          |
+| `facts_hash`                    | pipeline | Hash of the fact sheet's content (ignores sources and order); `refresh` compares it.                                                                           |
+| `draft_json`                    | pipeline | Latest draft: title, standfirst, meta description, body, FAQ, tour and hotel ids.                                                                              |
+| `published_at`, `refresh_after` | pipeline | Set by publish; Towns have no such columns, so they live here.                                                                                                 |
+| `cost_usd`                      | pipeline | Total API spend on this row.                                                                                                                                   |
+| `usage_json`                    | pipeline | Last 40 calls: stage, model, input/output/cached tokens, searches, USD.                                                                                        |
+| `error`                         | pipeline | Last error message.                                                                                                                                            |
+| `updated_at`                    | pipeline | Last pipeline write.                                                                                                                                           |
 
 ### Facts (one row per Queue row)
 
@@ -124,6 +126,10 @@ You fill `id`, `target`, `slug` and the page columns; the pipeline fills the res
 
 - **Articles:** `title`, `standfirst`, `meta_description`, `body_mdx`, `faq_json`, `tour_ids`, `hotel_ids`, `schema_type` (from the template), `updated_at`; on publish also `status`, `published_at`, `refresh_after`. New rows are created with `status=draft`.
 - **Towns:** `intro_mdx` (the standfirst), `body_mdx`, `faq_json`, `updated_at`; on publish `status`. The town page shows hotels and tours from their tabs itself, so town drafts embed no cards.
+- **Regions:** `tagline` (the standfirst), `intro_mdx` (the body), `updated_at`; on publish `status`.
+- **SubRegions:** `intro_mdx` (standfirst, then body); on publish `status`. The tab has no `updated_at` or FAQ column.
+
+Place pages (towns, regions, sub-regions) render their own tours, hotels, estates and practical sections, so their templates leave those out.
 
 ## Environment
 
@@ -155,10 +161,11 @@ pipeline/
   commands/           init, research, draft, check, publish, refresh, run
   lib/                pure functions, tested with Vitest (*.test.ts)
   fixtures/dry-run-queue.json
+  launch-queue.json   launch Queue rows (regions, wine areas, towns, guides, itineraries, practical pages) for `seed`
 content/
   prompts/            research.md, draft.md, redraft.md, check.md
-  templates/          guide, ranked_list, hotel_roundup, itinerary, practical, town
+  templates/          guide, ranked_list, hotel_roundup, itinerary, practical, town, region, subregion
   style-guide.md, banned-phrases.txt, selection-rules.md, research-blocklist.txt
 ```
 
-Template frontmatter: `target` (`articles` or `towns`), `words` (`min-max`), `required_headings` and `required_components` (`|`-separated), optional `max_tables`, `h2_per_tour: true` (ranked lists) and `schema_type`.
+Template frontmatter: `target` (`articles`, `towns`, `regions` or `subregions`), `words` (`min-max`), `required_headings` and `required_components` (`|`-separated), optional `max_tables`, `h2_per_tour: true` (ranked lists) and `schema_type`.

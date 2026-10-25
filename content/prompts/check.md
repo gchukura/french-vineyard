@@ -14,7 +14,7 @@ You will receive:
 Grade each rule as pass or fail, quoting the exact text that fails.
 
 1. **numbers_sourced**: every number in the draft appears in the fact sheet, tours or hotels, or is a USD conversion in parentheses at the brief's rate, or an hours-and-minutes version of a duration in minutes. The automated findings list unmatched numbers; confirm or dismiss each one and look for numbers they missed (numbers written as words, such as "fifteen minutes", count too).
-2. **facts_sourced**: every factual claim (names, opening periods, visit types, rules, distances) is supported by the fact sheet, tours or hotels. Claims that are general common sense ("wear comfortable shoes") pass. Claims about specific places, prices or schedules that aren't in the brief fail.
+2. **facts_sourced**: every factual claim (names, opening periods, visit types, rules, distances) is supported by the fact sheet, tours or hotels. Claims that are general common sense ("wear comfortable shoes") pass, and so does general safety advice about tasting and driving ("spit as you go," "choose a designated driver"). Claims about the drink-drive law itself (its limit or how strict it is) need the fact sheet. Claims about specific places, prices or schedules that aren't in the brief fail.
 3. **no_banned_phrases**: none of the banned phrases or close variants appear.
 4. **word_count**: the body is within the template's word range. Trust the automated count.
 5. **required_headings**: every required heading is present as an H2.

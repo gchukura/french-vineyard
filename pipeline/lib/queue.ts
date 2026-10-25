@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 import type { UsageEntry } from "./cost";
+import { TARGETS } from "./targets";
+
+export { refreshMonths } from "./targets";
 
 /** Queue tab rows and the stage machine that moves them along. */
 
@@ -37,7 +40,7 @@ export const queueSchema = z.object({
       String(v ?? "")
         .trim()
         .toLowerCase(),
-    z.enum(["articles", "towns"]),
+    z.enum(TARGETS),
   ),
   slug: text.pipe(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "must be a lowercase ASCII slug")),
   page_type: lowerOptional,
@@ -89,11 +92,6 @@ export const QUERIES_HEADERS = [
   "notes",
   "queued",
 ];
-
-/** Months until a published page is due for a refresh. */
-export function refreshMonths(row: Pick<QueueRow, "target" | "page_type">): number {
-  return row.target === "towns" ? 12 : 6;
-}
 
 export type CheckOutcome = { stage: Stage; attempts: number; redraft: boolean };
 

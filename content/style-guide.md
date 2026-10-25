@@ -32,7 +32,7 @@ Readers are English-speaking travelers planning a few days in a French wine regi
 - Describe wine as part of a place: what grows there, how it's made, what a visit involves.
 - **Never sell wine.** No "buy," "order," "stock up," "ship home," discount codes or bottle prices framed as deals. Tasting fees are fine; they're the cost of a visit.
 - Don't describe drinking as the point of the trip. No toasts, no "raise a glass," no party language.
-- Mention spitting and designated drivers matter-of-factly where tastings are covered. France's drink-drive limit is strict and is one of the warnings worth giving.
+- Mention spitting and designated drivers matter-of-factly where tastings are covered; that advice needs no source. Say anything about the drink-drive law itself (the limit, the penalties, that it is strict) only if the fact sheet states it.
 
 ## Spelling, punctuation and names
 

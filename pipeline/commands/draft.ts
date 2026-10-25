@@ -16,6 +16,7 @@ import {
   type DraftBrief,
 } from "../lib/prompt";
 import type { QueueRow } from "../lib/queue";
+import { contentPatch, researchGate, TARGET_TAB } from "../lib/targets";
 
 /** Above this many rows, drafts go through the Message Batches API. */
 export const BATCH_THRESHOLD = 20;
@@ -55,35 +56,6 @@ function toDraft(result: CallResult, brief: DraftBrief): Draft {
   };
 }
 
-/** The content-tab columns a draft fills, for Articles or Towns. */
-export function contentPatch(
-  row: QueueRow,
-  draft: Draft,
-  today: string,
-  schemaType?: string,
-): Record<string, string> {
-  const faq = JSON.stringify(draft.faq);
-  if (row.target === "towns") {
-    return {
-      intro_mdx: draft.standfirst ?? "",
-      body_mdx: draft.body_mdx,
-      faq_json: faq,
-      updated_at: today,
-    };
-  }
-  return {
-    title: draft.title ?? "",
-    standfirst: draft.standfirst ?? "",
-    meta_description: draft.meta_description ?? "",
-    body_mdx: draft.body_mdx,
-    faq_json: faq,
-    tour_ids: draft.tour_ids.join(", "),
-    hotel_ids: draft.hotel_ids.join(", "),
-    ...(schemaType ? { schema_type: schemaType } : {}),
-    updated_at: today,
-  };
-}
-
 /**
  * Stores the draft on the Queue row, and on the content row too unless that
  * row is already published (a refresh), so a live page never shows an
@@ -92,11 +64,11 @@ export function contentPatch(
 async function saveDraft(ctx: Context, job: DraftJob, draft: Draft) {
   const { row } = job;
   const template = await ctx.template(row);
-  const tab = row.target === "towns" ? "Towns" : "Articles";
+  const tab = TARGET_TAB[row.target];
   const existing = (await ctx.store.rows(tab)).find((r) => r.slug === row.slug);
   const live = existing?.status?.trim().toLowerCase() === "published";
   if (!live) {
-    const patch = contentPatch(row, draft, ctx.today, template.schemaType);
+    const patch = contentPatch(row.target, draft, ctx.today, template.schemaType);
     if (existing) await ctx.store.update(tab, "slug", row.slug, patch);
     else if (tab === "Articles") {
       await ctx.store.append("Articles", {
@@ -108,7 +80,7 @@ async function saveDraft(ctx: Context, job: DraftJob, draft: Draft) {
         status: "draft",
         ...patch,
       });
-    } else throw new Error(`Towns has no row with slug ${row.slug}`);
+    } else throw new Error(`${tab} has no row with slug ${row.slug}`);
   }
   await ctx.updateQueue(row, {
     stage: "drafted",
@@ -118,12 +90,17 @@ async function saveDraft(ctx: Context, job: DraftJob, draft: Draft) {
   });
 }
 
-/** Rows that can't be drafted as briefed go to needs_review with the reason. */
+/**
+ * Rows that can't be drafted as briefed go to needs_review with the reason,
+ * before any tokens are spent: thin research, or a ranked list with no tours.
+ */
 async function precheck(
   ctx: Context,
   job: DraftJob,
   brief: DraftBrief,
 ): Promise<string | undefined> {
+  const thin = researchGate(brief.facts, job.row);
+  if (thin) return thin;
   const template = await ctx.template(job.row);
   if (template.h2PerTour && !brief.tours.length) {
     return `No published tours in the Tours tab match region=${job.row.region_slug ?? "-"} town=${job.row.town_slug ?? "-"} category=${job.row.category ?? "-"}`;

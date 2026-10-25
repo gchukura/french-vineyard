@@ -6,6 +6,7 @@ export const COMMANDS = [
   "publish",
   "refresh",
   "run",
+  "seed",
 ] as const;
 export type Command = (typeof COMMANDS)[number];
 
@@ -18,6 +19,8 @@ export type Args = {
   queueFile?: string;
   /** Only these Queue ids. */
   only?: string[];
+  /** JSON file of Queue rows for `seed`. */
+  file?: string;
   /** Overrides PIPELINE_BUDGET_USD. */
   budget?: number;
 };
@@ -32,6 +35,7 @@ Commands:
   publish <n>     publish up to n checked rows
   refresh <n>     re-research up to n published rows past refresh_after
   run             research, draft, check and publish in sequence
+  seed --file <f> append Queue rows from a JSON array (skips existing ids)
 
 Options:
   --max <n>          same as the positional n (default 10)
@@ -61,6 +65,7 @@ export function parseArgs(argv: string[]): Args {
     if (arg === "--dry-run") args.dryRun = true;
     else if (arg === "--max") args.max = positiveInt(value(i++, arg), arg);
     else if (arg === "--queue-file") args.queueFile = value(i++, arg);
+    else if (arg === "--file") args.file = value(i++, arg);
     else if (arg === "--only")
       args.only = value(i++, arg)
         .split(",")

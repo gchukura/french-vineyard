@@ -1,7 +1,9 @@
 import type { Context } from "../context";
 import { BudgetExceeded } from "../lib/cost";
 import { addMonths, isDue } from "../lib/dates";
-import { refreshMonths } from "../lib/queue";
+import { sheetTag } from "@/lib/sheet-schema";
+
+import { hasUpdatedAt, refreshMonths, TARGET_TAB } from "../lib/targets";
 import { check } from "./check";
 import { draft } from "./draft";
 import { revalidate } from "./publish";
@@ -36,14 +38,16 @@ export async function refresh(ctx: Context, max = ctx.args.max): Promise<number>
         changed.push(row.id);
         ctx.log(`${row.id} facts changed (${row.facts_hash} -> ${r.hash}); redrafting`);
       } else {
-        const tab = row.target === "towns" ? "Towns" : "Articles";
+        const tab = TARGET_TAB[row.target];
         const next = addMonths(ctx.today, refreshMonths(row));
-        await ctx.store.update(tab, "slug", row.slug, {
-          updated_at: ctx.today,
-          ...(tab === "Articles" ? { refresh_after: next } : {}),
-        });
+        const patch: Record<string, string> = {};
+        if (hasUpdatedAt(row.target)) patch.updated_at = ctx.today;
+        if (row.target === "articles") patch.refresh_after = next;
+        if (Object.keys(patch).length) {
+          await ctx.store.update(tab, "slug", row.slug, patch);
+          tags.add(sheetTag(tab));
+        }
         await ctx.updateQueue(row, { refresh_after: next });
-        tags.add(tab === "Towns" ? "sheet-towns" : "sheet-articles");
         ctx.log(`${row.id} facts unchanged; updated_at bumped, next refresh ${next}`);
       }
     } catch (error) {

@@ -22,3 +22,10 @@ civitatis.com
 winalist.com
 quora.com
 reddit.com
+# Coordinate and distance lookup sites
+countrycoordinate.com
+distancesto.com
+latlong.net
+gps-coordinates.net
+latitude.to
+mapcarta.com

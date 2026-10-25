@@ -52,8 +52,14 @@ export class SheetStore {
 
   private async getDoc(): Promise<GoogleSpreadsheet> {
     if (this.doc) return this.doc;
-    // A dry run only reads, so it may fall back to the site's read-only account.
-    const fallback = this.dryRun && !process.env.PIPELINE_SERVICE_ACCOUNT_EMAIL;
+    // A dry run only reads, so it may fall back to the site's read-only
+    // account until both pipeline credentials are set.
+    const fallback =
+      this.dryRun &&
+      !(
+        process.env.PIPELINE_SERVICE_ACCOUNT_EMAIL &&
+        process.env.PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY
+      );
     const auth = new JWT({
       email: requireEnv(
         fallback ? "GOOGLE_SERVICE_ACCOUNT_EMAIL" : "PIPELINE_SERVICE_ACCOUNT_EMAIL",

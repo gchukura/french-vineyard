@@ -545,8 +545,8 @@
     "page_type": "guide",
     "region_slug": "champagne",
     "town_slug": "reims",
-    "target_keyword": "Reims champagne houses",
-    "notes": "Guide. Houses that take visitors, chalk cellars, booking and fees.",
+    "target_keyword": "Reims champagne house cellar tours",
+    "notes": "Guide. Visiting the big Champagne houses' cellars in Reims only: which houses run cellar tours, the chalk crayères, tour types, booking and fees. Leave the town, getting there and other sights to the reims town page.",
     "stage": "queued"
   },
   {
@@ -556,8 +556,8 @@
     "page_type": "guide",
     "region_slug": "champagne",
     "town_slug": "epernay",
-    "target_keyword": "Épernay champagne houses",
-    "notes": "Guide. Avenue de Champagne houses, visit types, booking and fees.",
+    "target_keyword": "Avenue de Champagne houses Épernay",
+    "notes": "Guide. The houses on the Avenue de Champagne only: which take visitors, visit types, booking, fees and walking the avenue house to house. Leave the town, getting there and other sights to the epernay town page.",
     "stage": "queued"
   },
   {
@@ -715,14 +715,14 @@
     "stage": "queued"
   },
   {
-    "id": "a-visiting-saint-emilion",
+    "id": "a-saint-emilion-day-trip-from-bordeaux",
     "target": "articles",
-    "slug": "visiting-saint-emilion",
+    "slug": "saint-emilion-day-trip-from-bordeaux",
     "page_type": "guide",
     "region_slug": "bordeaux",
     "town_slug": "saint-emilion",
-    "target_keyword": "visiting Saint-Émilion",
-    "notes": "Guide. Day-trip and overnight planning from Bordeaux and Paris.",
+    "target_keyword": "Saint-Émilion day trip from Bordeaux",
+    "notes": "Guide. A day trip from Bordeaux city to Saint-Émilion: TER, bus or car there and back, what fits in one day (village, monolithic church, one or two château visits), what to book and the last train back. Leave overnight stays and the village itself to the saint-emilion town page.",
     "stage": "queued"
   },
   {

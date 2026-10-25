@@ -1,0 +1,61 @@
+# One phrase per line, matched case-insensitively on word boundaries.
+# "..." matches any short run of words, e.g. "whether you're ... or ...".
+# Lines starting with # are comments.
+hidden gem
+nestled
+boasts
+must-see
+a feast for the senses
+delve
+tapestry
+whether you're ... or ...
+bucket list
+off the beaten path
+off the beaten track
+something for everyone
+rich history
+steeped in history
+picturesque
+breathtaking
+stunning
+world-class
+unforgettable
+a true gem
+quaint
+idyllic
+a testament to
+in the heart of
+look no further
+elevate your
+embark on
+immerse yourself
+unparalleled
+second to none
+treat yourself
+paradise
+oasis
+vibrant
+bustling
+renowned
+iconic
+enchanting
+magical
+nothing short of
+it's no secret
+needless to say
+in today's world
+the perfect blend
+a symphony of
+a journey through
+unlock the
+navigate the
+when it comes to
+a myriad of
+plethora
+let's dive in
+dive into
+sip your way
+wine lover's dream
+uncork
+raise a glass
+cheers to

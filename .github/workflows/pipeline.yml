@@ -1,0 +1,44 @@
+name: Content pipeline
+
+on:
+  schedule:
+    - cron: "0 2 * * *" # 02:00 UTC nightly
+  workflow_dispatch:
+    inputs:
+      max:
+        description: "Most rows per stage"
+        default: "30"
+
+permissions:
+  contents: read
+
+# Never let two runs move the same Queue rows at once.
+concurrency:
+  group: content-pipeline
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    # More than 20 drafts go through the Message Batches API, which can take a
+    # while to finish; the job waits for it.
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run pipeline -- run --max ${{ inputs.max || '30' }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PIPELINE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.PIPELINE_SERVICE_ACCOUNT_EMAIL }}
+          PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY }}
+          PIPELINE_SHEET_ID: ${{ secrets.PIPELINE_SHEET_ID }}
+          PIPELINE_BUDGET_USD: ${{ vars.PIPELINE_BUDGET_USD || '25' }}
+          PIPELINE_MODEL: ${{ vars.PIPELINE_MODEL }}
+          PIPELINE_CHECK_MODEL: ${{ vars.PIPELINE_CHECK_MODEL }}
+          PIPELINE_EUR_USD_RATE: ${{ vars.PIPELINE_EUR_USD_RATE }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://frenchvineyard.com' }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}

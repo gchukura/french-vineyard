@@ -1,0 +1,25 @@
+name: Keepalive
+
+# GitHub disables scheduled workflows in repositories with no commits for 60
+# days. A monthly timestamp commit keeps the nightly pipeline running.
+on:
+  schedule:
+    - cron: "0 3 1 * *" # 03:00 UTC on the 1st of each month
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Commit a timestamp
+        run: |
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .github/keepalive
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/keepalive
+          git commit -m "Keepalive $(cat .github/keepalive)"
+          git push

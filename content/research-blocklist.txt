@@ -1,0 +1,31 @@
+# Domains web search never returns during research (subdomains included).
+# Aggregators, review sites and booking platforms: never a source for facts.
+# One hostname per line; at most 64. Lines starting with # are comments.
+rome2rio.com
+tripadvisor.com
+tripadvisor.co.uk
+tripadvisor.fr
+wanderlog.com
+tripsavvy.com
+trip.com
+travelpayouts.com
+getyourguide.com
+viator.com
+booking.com
+expedia.com
+hotels.com
+klook.com
+tiqets.com
+musement.com
+headout.com
+civitatis.com
+winalist.com
+quora.com
+reddit.com
+# Coordinate and distance lookup sites
+countrycoordinate.com
+distancesto.com
+latlong.net
+gps-coordinates.net
+latitude.to
+mapcarta.com

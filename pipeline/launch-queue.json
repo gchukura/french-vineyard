@@ -1,0 +1,1082 @@
+[
+  {
+    "id": "r-champagne",
+    "target": "regions",
+    "slug": "champagne",
+    "region_slug": "champagne",
+    "target_keyword": "Champagne wine region",
+    "notes": "Region hub. How champagne is made and classified (houses vs growers, grand and premier cru villages), how house visits work, how to split a trip between Reims and Épernay.",
+    "stage": "queued"
+  },
+  {
+    "id": "r-bordeaux",
+    "target": "regions",
+    "slug": "bordeaux",
+    "region_slug": "bordeaux",
+    "target_keyword": "Bordeaux wine region",
+    "notes": "Region hub. Left bank vs right bank, the 1855 and Saint-Émilion classifications in plain terms, how château visits are booked, choosing a base.",
+    "stage": "queued"
+  },
+  {
+    "id": "r-burgundy",
+    "target": "regions",
+    "slug": "burgundy",
+    "region_slug": "burgundy",
+    "target_keyword": "Burgundy wine region",
+    "notes": "Region hub. Climats and the village / premier cru / grand cru ladder, small domaines and appointment culture, Côte d'Or vs Chablis vs Mâconnais.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-montagne-de-reims",
+    "target": "subregions",
+    "slug": "montagne-de-reims",
+    "region_slug": "champagne",
+    "target_keyword": "Montagne de Reims wine area",
+    "notes": "Wine area page. Pinot noir slopes south of Reims; grand cru villages such as Verzenay and Bouzy; the regional nature park.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-vallee-de-la-marne",
+    "target": "subregions",
+    "slug": "vallee-de-la-marne",
+    "region_slug": "champagne",
+    "target_keyword": "Vallée de la Marne wine area",
+    "notes": "Wine area page. Meunier country along the Marne; Hautvillers, Aÿ and Cumières; river and hillside walks.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-cote-des-blancs",
+    "target": "subregions",
+    "slug": "cote-des-blancs",
+    "region_slug": "champagne",
+    "target_keyword": "Côte des Blancs wine area",
+    "notes": "Wine area page. Chardonnay slope south of Épernay; Cramant, Avize, Le Mesnil-sur-Oger; grower visits.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-cote-de-sezanne",
+    "target": "subregions",
+    "slug": "cote-de-sezanne",
+    "region_slug": "champagne",
+    "target_keyword": "Côte de Sézanne wine area",
+    "notes": "Wine area page. Quieter chardonnay area south of the Côte des Blancs; small growers; fewer visitors.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-cote-des-bar",
+    "target": "subregions",
+    "slug": "cote-des-bar",
+    "region_slug": "champagne",
+    "target_keyword": "Côte des Bar wine area",
+    "notes": "Wine area page. The Aube, far south near Troyes; pinot noir, Les Riceys and its rosé; growers rather than big houses.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-medoc",
+    "target": "subregions",
+    "slug": "medoc",
+    "region_slug": "bordeaux",
+    "target_keyword": "Médoc wine area",
+    "notes": "Wine area page. Left bank: Margaux, Saint-Julien, Pauillac, Saint-Estèphe; the 1855 classified châteaux and the D2 route des châteaux.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-graves",
+    "target": "subregions",
+    "slug": "graves",
+    "region_slug": "bordeaux",
+    "target_keyword": "Graves wine area",
+    "notes": "Wine area page. South of the city, including Pessac-Léognan; red and dry white; gravel soils; the closest vineyards to Bordeaux.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-sauternais",
+    "target": "subregions",
+    "slug": "sauternais",
+    "region_slug": "bordeaux",
+    "target_keyword": "Sauternais wine area",
+    "notes": "Wine area page. Sauternes and Barsac sweet wines; noble rot and autumn mists along the Ciron.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-libournais",
+    "target": "subregions",
+    "slug": "libournais",
+    "region_slug": "bordeaux",
+    "target_keyword": "Libournais wine area",
+    "notes": "Wine area page. Right bank: Saint-Émilion, Pomerol, Fronsac; merlot; Libourne as a base.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-entre-deux-mers",
+    "target": "subregions",
+    "slug": "entre-deux-mers",
+    "region_slug": "bordeaux",
+    "target_keyword": "Entre-deux-Mers wine area",
+    "notes": "Wine area page. Between the Garonne and Dordogne; dry whites, bastide villages, the Roger Lapébie cycle path.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-chablis",
+    "target": "subregions",
+    "slug": "chablis",
+    "region_slug": "burgundy",
+    "target_keyword": "Chablis wine area",
+    "notes": "Wine area page. Northern outpost near Auxerre; chardonnay on Kimmeridgian soils; grand cru slope above the Serein.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-cote-de-nuits",
+    "target": "subregions",
+    "slug": "cote-de-nuits",
+    "region_slug": "burgundy",
+    "target_keyword": "Côte de Nuits wine area",
+    "notes": "Wine area page. Dijon to Nuits-Saint-Georges; pinot noir grands crus; Gevrey-Chambertin, Vosne-Romanée, Clos de Vougeot.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-cote-de-beaune",
+    "target": "subregions",
+    "slug": "cote-de-beaune",
+    "region_slug": "burgundy",
+    "target_keyword": "Côte de Beaune wine area",
+    "notes": "Wine area page. Beaune to Santenay; Pommard, Volnay, Meursault, Puligny-Montrachet; white and red.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-cote-chalonnaise",
+    "target": "subregions",
+    "slug": "cote-chalonnaise",
+    "region_slug": "burgundy",
+    "target_keyword": "Côte Chalonnaise wine area",
+    "notes": "Wine area page. Rully, Mercurey, Givry, Montagny; good-value villages; quieter visits.",
+    "stage": "queued"
+  },
+  {
+    "id": "s-maconnais",
+    "target": "subregions",
+    "slug": "maconnais",
+    "region_slug": "burgundy",
+    "target_keyword": "Mâconnais wine area",
+    "notes": "Wine area page. Southern Burgundy near Mâcon; Pouilly-Fuissé and the Roche de Solutré; chardonnay.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-reims",
+    "target": "towns",
+    "slug": "reims",
+    "region_slug": "champagne",
+    "target_keyword": "visiting Reims",
+    "notes": "Town page. Champagne houses with chalk cellars (crayères), the cathedral, fast TGV from Paris Est.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-epernay",
+    "target": "towns",
+    "slug": "epernay",
+    "region_slug": "champagne",
+    "target_keyword": "Épernay wine town",
+    "notes": "Town page. Avenue de Champagne houses and how visits work; direct train from Paris.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-hautvillers",
+    "target": "towns",
+    "slug": "hautvillers",
+    "region_slug": "champagne",
+    "target_keyword": "visiting Hautvillers",
+    "notes": "Town page. Village above the Marne linked to Dom Pérignon; abbey church; growers; no station, so access from Épernay.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-ay",
+    "target": "towns",
+    "slug": "ay",
+    "region_slug": "champagne",
+    "target_keyword": "Aÿ champagne village",
+    "notes": "Town page. Grand cru village next to Épernay; houses and growers; the Ligne des bulles train.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-chalons-en-champagne",
+    "target": "towns",
+    "slug": "chalons-en-champagne",
+    "region_slug": "champagne",
+    "target_keyword": "Châlons-en-Champagne",
+    "notes": "Town page. Canal town east of Épernay; a quieter base; houses in town.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-troyes",
+    "target": "towns",
+    "slug": "troyes",
+    "region_slug": "champagne",
+    "target_keyword": "visiting Troyes",
+    "notes": "Town page. Half-timbered old town; gateway to the Côte des Bar; train from Paris Est.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-bordeaux",
+    "target": "towns",
+    "slug": "bordeaux",
+    "region_slug": "bordeaux",
+    "target_keyword": "Bordeaux city for wine lovers",
+    "notes": "Town page. City base: Cité du Vin, wine bars, how to reach the vineyards by tram, train and tour.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-saint-emilion",
+    "target": "towns",
+    "slug": "saint-emilion",
+    "region_slug": "bordeaux",
+    "target_keyword": "visiting Saint-Émilion village",
+    "notes": "Town page. Medieval village and UNESCO jurisdiction; châteaux of the day; TER from Bordeaux.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-pauillac",
+    "target": "towns",
+    "slug": "pauillac",
+    "region_slug": "bordeaux",
+    "target_keyword": "visiting Pauillac",
+    "notes": "Town page. Médoc riverside town; first growth châteaux nearby; how appointments work.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-margaux",
+    "target": "towns",
+    "slug": "margaux",
+    "region_slug": "bordeaux",
+    "target_keyword": "visiting Margaux",
+    "notes": "Town page. Médoc village closest to Bordeaux; classified châteaux; the Margaux wine house.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-libourne",
+    "target": "towns",
+    "slug": "libourne",
+    "region_slug": "bordeaux",
+    "target_keyword": "Libourne",
+    "notes": "Town page. Right bank market town and rail hub for Saint-Émilion and Pomerol.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-arcachon",
+    "target": "towns",
+    "slug": "arcachon",
+    "region_slug": "bordeaux",
+    "target_keyword": "Arcachon and the Bordeaux vineyards",
+    "notes": "Town page. Coastal base an hour from Bordeaux; how to combine the coast with vineyard days. Keep the wine angle practical.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-sauternes",
+    "target": "towns",
+    "slug": "sauternes",
+    "region_slug": "bordeaux",
+    "target_keyword": "visiting Sauternes",
+    "notes": "Town page. Sweet wine village; château visits; no station, so access by car or tour.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-beaune",
+    "target": "towns",
+    "slug": "beaune",
+    "region_slug": "burgundy",
+    "target_keyword": "Beaune wine town",
+    "notes": "Town page. Hospices de Beaune, cellars under the town, base for the Côte de Beaune.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-dijon",
+    "target": "towns",
+    "slug": "dijon",
+    "region_slug": "burgundy",
+    "target_keyword": "Dijon and the Burgundy vineyards",
+    "notes": "Town page. City base at the top of the Route des Grands Crus; Cité des vins site; TGV from Paris.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-nuits-saint-georges",
+    "target": "towns",
+    "slug": "nuits-saint-georges",
+    "region_slug": "burgundy",
+    "target_keyword": "visiting Nuits-Saint-Georges",
+    "notes": "Town page. Côte de Nuits town; domaines and négociants; train stop between Dijon and Beaune.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-meursault",
+    "target": "towns",
+    "slug": "meursault",
+    "region_slug": "burgundy",
+    "target_keyword": "visiting Meursault",
+    "notes": "Town page. White wine village south of Beaune; château cellars; cycle route access.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-chablis",
+    "target": "towns",
+    "slug": "chablis",
+    "region_slug": "burgundy",
+    "target_keyword": "visiting Chablis",
+    "notes": "Town page. Small town on the Serein; chardonnay producers; no station, so access via Auxerre.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-macon",
+    "target": "towns",
+    "slug": "macon",
+    "region_slug": "burgundy",
+    "target_keyword": "Mâcon wine town",
+    "notes": "Town page. Southern base on the Saône; Mâconnais and Pouilly-Fuissé; TGV station nearby.",
+    "stage": "queued"
+  },
+  {
+    "id": "t-gevrey-chambertin",
+    "target": "towns",
+    "slug": "gevrey-chambertin",
+    "region_slug": "burgundy",
+    "target_keyword": "visiting Gevrey-Chambertin",
+    "notes": "Town page. Grand cru village on the Route des Grands Crus; small domaines by appointment.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-paris-to-reims-by-train",
+    "target": "articles",
+    "slug": "paris-to-reims-by-train",
+    "page_type": "practical",
+    "region_slug": "champagne",
+    "target_keyword": "Paris to Reims by train",
+    "notes": "Practical page. TGV from Paris Est: times, frequency, fares, station to center.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-paris-to-epernay-by-train",
+    "target": "articles",
+    "slug": "paris-to-epernay-by-train",
+    "page_type": "practical",
+    "region_slug": "champagne",
+    "town_slug": "epernay",
+    "target_keyword": "Paris to Épernay by train",
+    "notes": "Practical page. Direct TER and changes at Reims; times and fares.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-reims-to-epernay",
+    "target": "articles",
+    "slug": "reims-to-epernay",
+    "page_type": "practical",
+    "region_slug": "champagne",
+    "town_slug": "reims",
+    "target_keyword": "Reims to Épernay",
+    "notes": "Practical page. Ligne des bulles TER, car, bus; times and stops.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-cdg-airport-to-champagne",
+    "target": "articles",
+    "slug": "cdg-airport-to-champagne",
+    "page_type": "practical",
+    "region_slug": "champagne",
+    "target_keyword": "Paris CDG to Champagne",
+    "notes": "Practical page. TGV from the airport station to Reims; options and times.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-champagne-without-a-car",
+    "target": "articles",
+    "slug": "champagne-without-a-car",
+    "page_type": "practical",
+    "region_slug": "champagne",
+    "target_keyword": "Champagne without a car",
+    "notes": "Practical page. Trains, taxis, bikes and tours; which villages are reachable.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-booking-champagne-house-visits",
+    "target": "articles",
+    "slug": "booking-champagne-house-visits",
+    "page_type": "practical",
+    "region_slug": "champagne",
+    "target_keyword": "booking champagne house visits",
+    "notes": "Practical page. How far ahead to book, what tours include, fees, cancellations, Sundays.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-paris-to-bordeaux-by-train",
+    "target": "articles",
+    "slug": "paris-to-bordeaux-by-train",
+    "page_type": "practical",
+    "region_slug": "bordeaux",
+    "town_slug": "bordeaux",
+    "target_keyword": "Paris to Bordeaux by train",
+    "notes": "Practical page. TGV from Montparnasse: times, fares, station to center.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-bordeaux-to-saint-emilion",
+    "target": "articles",
+    "slug": "bordeaux-to-saint-emilion",
+    "page_type": "practical",
+    "region_slug": "bordeaux",
+    "town_slug": "saint-emilion",
+    "target_keyword": "Bordeaux to Saint-Émilion",
+    "notes": "Practical page. TER, bus, car and tours; times, fares, station walk.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-bordeaux-to-the-medoc",
+    "target": "articles",
+    "slug": "bordeaux-to-the-medoc",
+    "page_type": "practical",
+    "region_slug": "bordeaux",
+    "target_keyword": "Bordeaux to the Médoc",
+    "notes": "Practical page. Car, bus, tours; how far the châteaux are; driving times.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-bordeaux-airport-to-the-vineyards",
+    "target": "articles",
+    "slug": "bordeaux-airport-to-the-vineyards",
+    "page_type": "practical",
+    "region_slug": "bordeaux",
+    "target_keyword": "Bordeaux airport to the vineyards",
+    "notes": "Practical page. Mérignac airport to the city, Saint-Émilion and Médoc.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-bordeaux-vineyards-without-a-car",
+    "target": "articles",
+    "slug": "bordeaux-vineyards-without-a-car",
+    "page_type": "practical",
+    "region_slug": "bordeaux",
+    "target_keyword": "Bordeaux vineyards without a car",
+    "notes": "Practical page. Trains, buses, bikes and tours; which areas are reachable.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-booking-bordeaux-chateau-visits",
+    "target": "articles",
+    "slug": "booking-bordeaux-chateau-visits",
+    "page_type": "practical",
+    "region_slug": "bordeaux",
+    "target_keyword": "booking Bordeaux château visits",
+    "notes": "Practical page. How to book, how far ahead, fees, classified châteaux policies.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-paris-to-beaune-by-train",
+    "target": "articles",
+    "slug": "paris-to-beaune-by-train",
+    "page_type": "practical",
+    "region_slug": "burgundy",
+    "town_slug": "beaune",
+    "target_keyword": "Paris to Beaune by train",
+    "notes": "Practical page. TGV to Dijon then TER, or direct services; times and fares.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-dijon-to-beaune",
+    "target": "articles",
+    "slug": "dijon-to-beaune",
+    "page_type": "practical",
+    "region_slug": "burgundy",
+    "town_slug": "beaune",
+    "target_keyword": "Dijon to Beaune",
+    "notes": "Practical page. TER, car, bike along the Route des Grands Crus; times.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-getting-to-chablis",
+    "target": "articles",
+    "slug": "getting-to-chablis",
+    "page_type": "practical",
+    "region_slug": "burgundy",
+    "town_slug": "chablis",
+    "target_keyword": "getting to Chablis",
+    "notes": "Practical page. From Paris via Auxerre; bus, taxi, car; times.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-lyon-airport-to-burgundy",
+    "target": "articles",
+    "slug": "lyon-airport-to-burgundy",
+    "page_type": "practical",
+    "region_slug": "burgundy",
+    "target_keyword": "Lyon airport to Burgundy",
+    "notes": "Practical page. Lyon-Saint Exupéry to Mâcon and Beaune by train and car.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-burgundy-without-a-car",
+    "target": "articles",
+    "slug": "burgundy-without-a-car",
+    "page_type": "practical",
+    "region_slug": "burgundy",
+    "target_keyword": "Burgundy without a car",
+    "notes": "Practical page. Trains, the Voie des Vignes by bike, tours; reachable villages.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-booking-burgundy-domaine-visits",
+    "target": "articles",
+    "slug": "booking-burgundy-domaine-visits",
+    "page_type": "practical",
+    "region_slug": "burgundy",
+    "target_keyword": "booking Burgundy domaine visits",
+    "notes": "Practical page. Appointment culture, how to ask, fees, what to expect.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-champagne-day-trip-from-paris",
+    "target": "articles",
+    "slug": "champagne-day-trip-from-paris",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "target_keyword": "Champagne day trip from Paris",
+    "notes": "Guide. Reims or Épernay in a day by train; what fits and what to book.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-reims-champagne-houses",
+    "target": "articles",
+    "slug": "reims-champagne-houses",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "town_slug": "reims",
+    "target_keyword": "Reims champagne house cellar tours",
+    "notes": "Guide. Visiting the big Champagne houses' cellars in Reims only: which houses run cellar tours, the chalk crayères, tour types, booking and fees. Leave the town, getting there and other sights to the reims town page.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-epernay-champagne-houses",
+    "target": "articles",
+    "slug": "epernay-champagne-houses",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "town_slug": "epernay",
+    "target_keyword": "Avenue de Champagne houses Épernay",
+    "notes": "Guide. The houses on the Avenue de Champagne only: which take visitors, visit types, booking, fees and walking the avenue house to house. Leave the town, getting there and other sights to the epernay town page.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-reims-or-epernay",
+    "target": "articles",
+    "slug": "reims-or-epernay",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "target_keyword": "Reims or Épernay",
+    "notes": "Guide. Which to base yourself in, compared on trains, houses, hotels and atmosphere.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-champagne-harvest-visit",
+    "target": "articles",
+    "slug": "champagne-harvest-visit",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "target_keyword": "visiting Champagne during harvest",
+    "notes": "Guide. Harvest dates, what changes for visitors, closures and bookings.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-champagne-in-winter",
+    "target": "articles",
+    "slug": "champagne-in-winter",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "target_keyword": "Champagne in winter",
+    "notes": "Guide. What stays open November to March, December events, shorter hours.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-grower-champagne-visits",
+    "target": "articles",
+    "slug": "grower-champagne-visits",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "target_keyword": "visiting grower champagne producers",
+    "notes": "Guide. Récoltant-manipulant visits: how to find, book and what to expect.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-champagne-tasting-first-visit",
+    "target": "articles",
+    "slug": "champagne-tasting-first-visit",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "target_keyword": "first champagne tasting",
+    "notes": "Guide. How a house visit and tasting work for a first-timer; spitting, pacing, driving.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-dom-perignon-hautvillers-abbey",
+    "target": "articles",
+    "slug": "dom-perignon-hautvillers-abbey",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "town_slug": "hautvillers",
+    "target_keyword": "Dom Pérignon Hautvillers abbey",
+    "notes": "Guide. The abbey church and the Dom Pérignon story; visiting the village.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-champagne-unesco-hillsides-houses-cellars",
+    "target": "articles",
+    "slug": "champagne-unesco-hillsides-houses-cellars",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "target_keyword": "Champagne UNESCO hillsides houses and cellars",
+    "notes": "Guide. The three core areas and how to see each.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-champagne-vineyard-walks",
+    "target": "articles",
+    "slug": "champagne-vineyard-walks",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "target_keyword": "Champagne vineyard walks",
+    "notes": "Guide. Marked walks in the vineyards and the Montagne de Reims park.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-cycling-champagne-vineyards",
+    "target": "articles",
+    "slug": "cycling-champagne-vineyards",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "target_keyword": "cycling the Champagne vineyards",
+    "notes": "Guide. Routes, bike hire, e-bikes, the Marne cycle path.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-champagne-with-kids",
+    "target": "articles",
+    "slug": "champagne-with-kids",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "target_keyword": "Champagne with kids",
+    "notes": "Guide. Family-friendly visits, ages allowed in cellars, non-wine stops.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-champagne-festivals-and-events",
+    "target": "articles",
+    "slug": "champagne-festivals-and-events",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "target_keyword": "Champagne festivals and events",
+    "notes": "Guide. Habits de Lumière, open cellars weekends, harvest events by month.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-reims-crayeres-chalk-cellars",
+    "target": "articles",
+    "slug": "reims-crayeres-chalk-cellars",
+    "page_type": "guide",
+    "region_slug": "champagne",
+    "town_slug": "reims",
+    "target_keyword": "Reims crayères chalk cellars",
+    "notes": "Guide. The Gallo-Roman chalk pits under Reims and which houses show them.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-bordeaux-vineyard-day-trips",
+    "target": "articles",
+    "slug": "bordeaux-vineyard-day-trips",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "town_slug": "bordeaux",
+    "target_keyword": "Bordeaux vineyard day trips",
+    "notes": "Guide. Médoc, Saint-Émilion, Graves and Sauternes as day trips from the city.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-la-cite-du-vin-bordeaux",
+    "target": "articles",
+    "slug": "la-cite-du-vin-bordeaux",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "town_slug": "bordeaux",
+    "target_keyword": "La Cité du Vin Bordeaux",
+    "notes": "Guide. Visiting the Cité du Vin: tickets, time needed, tasting, getting there.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-medoc-route-des-chateaux",
+    "target": "articles",
+    "slug": "medoc-route-des-chateaux",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "target_keyword": "Médoc route des châteaux",
+    "notes": "Guide. Driving the D2 from Margaux to Saint-Estèphe; visits and booking.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-saint-emilion-day-trip-from-bordeaux",
+    "target": "articles",
+    "slug": "saint-emilion-day-trip-from-bordeaux",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "town_slug": "saint-emilion",
+    "target_keyword": "Saint-Émilion day trip from Bordeaux",
+    "notes": "Guide. A day trip from Bordeaux city to Saint-Émilion: TER, bus or car there and back, what fits in one day (village, monolithic church, one or two château visits), what to book and the last train back. Leave overnight stays and the village itself to the saint-emilion town page.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-saint-emilion-underground-monuments",
+    "target": "articles",
+    "slug": "saint-emilion-underground-monuments",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "town_slug": "saint-emilion",
+    "target_keyword": "Saint-Émilion monolithic church",
+    "notes": "Guide. Monolithic church, catacombs and the guided tour.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-visiting-pomerol",
+    "target": "articles",
+    "slug": "visiting-pomerol",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "target_keyword": "visiting Pomerol",
+    "notes": "Guide. Small estates, appointment-only visits, how to arrange one.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-bordeaux-first-growth-visits",
+    "target": "articles",
+    "slug": "bordeaux-first-growth-visits",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "target_keyword": "visiting Bordeaux first growths",
+    "notes": "Guide. Which first growths receive visitors and how to book.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-bordeaux-harvest-visit",
+    "target": "articles",
+    "slug": "bordeaux-harvest-visit",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "target_keyword": "Bordeaux during harvest",
+    "notes": "Guide. Harvest timing, what changes for visitors, harvest experiences.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-bordeaux-in-winter",
+    "target": "articles",
+    "slug": "bordeaux-in-winter",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "target_keyword": "Bordeaux wine country in winter",
+    "notes": "Guide. What stays open, shorter hours, events.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-cycling-entre-deux-mers",
+    "target": "articles",
+    "slug": "cycling-entre-deux-mers",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "target_keyword": "cycling Entre-deux-Mers",
+    "notes": "Guide. The Roger Lapébie path and vineyard stops along it.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-blaye-and-bourg",
+    "target": "articles",
+    "slug": "blaye-and-bourg",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "target_keyword": "Blaye and Bourg wine",
+    "notes": "Guide. The Blaye citadel and the Côtes de Bourg; the river ferry.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-bordeaux-wine-country-with-kids",
+    "target": "articles",
+    "slug": "bordeaux-wine-country-with-kids",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "target_keyword": "Bordeaux wine country with kids",
+    "notes": "Guide. Family-friendly châteaux and stops.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-bordeaux-chateau-stays",
+    "target": "articles",
+    "slug": "bordeaux-chateau-stays",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "target_keyword": "staying at a Bordeaux château",
+    "notes": "Guide. Château guest rooms: how they work, booking, what to expect.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-bordeaux-wine-festivals",
+    "target": "articles",
+    "slug": "bordeaux-wine-festivals",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "target_keyword": "Bordeaux wine festivals",
+    "notes": "Guide. Bordeaux Fête le Vin, open châteaux weekends, by month.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-saint-emilion-or-medoc",
+    "target": "articles",
+    "slug": "saint-emilion-or-medoc",
+    "page_type": "guide",
+    "region_slug": "bordeaux",
+    "target_keyword": "Saint-Émilion or Médoc",
+    "notes": "Guide. Comparing the two for a first visit: access, visits, atmosphere.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-route-des-grands-crus",
+    "target": "articles",
+    "slug": "route-des-grands-crus",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "target_keyword": "Route des Grands Crus",
+    "notes": "Guide. Driving or cycling Dijon to Santenay; villages and visits.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-hospices-de-beaune-wine-auction",
+    "target": "articles",
+    "slug": "hospices-de-beaune-wine-auction",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "town_slug": "beaune",
+    "target_keyword": "Hospices de Beaune wine auction",
+    "notes": "Guide. The November auction weekend: dates, events, what visitors can attend.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-clos-de-vougeot",
+    "target": "articles",
+    "slug": "clos-de-vougeot",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "target_keyword": "Château du Clos de Vougeot",
+    "notes": "Guide. Visiting the Clos de Vougeot château: tickets, hours, history.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-cite-des-climats-et-vins-de-bourgogne",
+    "target": "articles",
+    "slug": "cite-des-climats-et-vins-de-bourgogne",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "target_keyword": "Cité des Climats et Vins de Bourgogne",
+    "notes": "Guide. The three sites in Beaune, Chablis and Mâcon: tickets and what each covers.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-burgundy-climats-unesco",
+    "target": "articles",
+    "slug": "burgundy-climats-unesco",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "target_keyword": "Burgundy climats UNESCO",
+    "notes": "Guide. What the climats are and how to see them on the ground.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-burgundy-wine-trip-from-paris",
+    "target": "articles",
+    "slug": "burgundy-wine-trip-from-paris",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "target_keyword": "Burgundy wine trip from Paris",
+    "notes": "Guide. Beaune or Dijon by train for one or two days.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-voie-des-vignes-cycle-route",
+    "target": "articles",
+    "slug": "voie-des-vignes-cycle-route",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "target_keyword": "Voie des Vignes cycle route",
+    "notes": "Guide. The Beaune to Santenay route; bike hire; stops.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-burgundy-harvest-visit",
+    "target": "articles",
+    "slug": "burgundy-harvest-visit",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "target_keyword": "Burgundy during harvest",
+    "notes": "Guide. Harvest timing and what changes for visitors.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-burgundy-in-winter",
+    "target": "articles",
+    "slug": "burgundy-in-winter",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "target_keyword": "Burgundy in winter",
+    "notes": "Guide. What stays open, the Saint-Vincent tournante, shorter hours.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-visiting-burgundy-domaines",
+    "target": "articles",
+    "slug": "visiting-burgundy-domaines",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "target_keyword": "visiting small Burgundy domaines",
+    "notes": "Guide. How to visit family domaines: appointments, language, etiquette.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-burgundy-with-kids",
+    "target": "articles",
+    "slug": "burgundy-with-kids",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "target_keyword": "Burgundy with kids",
+    "notes": "Guide. Family-friendly visits and non-wine stops.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-burgundy-wine-festivals",
+    "target": "articles",
+    "slug": "burgundy-wine-festivals",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "target_keyword": "Burgundy wine festivals",
+    "notes": "Guide. Saint-Vincent tournante, open cellars weekends and events by month.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-roche-de-solutre",
+    "target": "articles",
+    "slug": "roche-de-solutre",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "target_keyword": "Roche de Solutré",
+    "notes": "Guide. Walking the rock above Pouilly-Fuissé; visits nearby.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-burgundy-tasting-basics",
+    "target": "articles",
+    "slug": "burgundy-tasting-basics",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "target_keyword": "Burgundy wine tasting basics",
+    "notes": "Guide. Village, premier cru and grand cru explained for a tasting visit.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-beaune-or-dijon",
+    "target": "articles",
+    "slug": "beaune-or-dijon",
+    "page_type": "guide",
+    "region_slug": "burgundy",
+    "target_keyword": "Beaune or Dijon",
+    "notes": "Guide. Which to base yourself in: trains, visits, hotels, atmosphere.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-champagne-weekend-itinerary",
+    "target": "articles",
+    "slug": "champagne-weekend-itinerary",
+    "page_type": "itinerary",
+    "region_slug": "champagne",
+    "target_keyword": "Champagne weekend itinerary",
+    "notes": "Itinerary. Two days: Reims then Épernay, with booked house visits.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-three-days-in-champagne",
+    "target": "articles",
+    "slug": "three-days-in-champagne",
+    "page_type": "itinerary",
+    "region_slug": "champagne",
+    "target_keyword": "three days in Champagne",
+    "notes": "Itinerary. Three days: Reims, Montagne de Reims, Épernay and the Côte des Blancs.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-champagne-by-train-itinerary",
+    "target": "articles",
+    "slug": "champagne-by-train-itinerary",
+    "page_type": "itinerary",
+    "region_slug": "champagne",
+    "target_keyword": "Champagne by train itinerary",
+    "notes": "Itinerary. Two days without a car using TGV, TER and walking.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-bordeaux-wine-weekend",
+    "target": "articles",
+    "slug": "bordeaux-wine-weekend",
+    "page_type": "itinerary",
+    "region_slug": "bordeaux",
+    "town_slug": "bordeaux",
+    "target_keyword": "Bordeaux wine weekend",
+    "notes": "Itinerary. Two days: city and Cité du Vin, then Saint-Émilion.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-three-days-left-and-right-bank",
+    "target": "articles",
+    "slug": "three-days-left-and-right-bank",
+    "page_type": "itinerary",
+    "region_slug": "bordeaux",
+    "target_keyword": "three days in Bordeaux wine country",
+    "notes": "Itinerary. Three days: Médoc, Saint-Émilion and Pomerol, Graves or Sauternes.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-bordeaux-wine-week",
+    "target": "articles",
+    "slug": "bordeaux-wine-week",
+    "page_type": "itinerary",
+    "region_slug": "bordeaux",
+    "target_keyword": "a week in Bordeaux wine country",
+    "notes": "Itinerary. Five days across the Médoc, right bank, Sauternes and Entre-deux-Mers.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-burgundy-weekend-itinerary",
+    "target": "articles",
+    "slug": "burgundy-weekend-itinerary",
+    "page_type": "itinerary",
+    "region_slug": "burgundy",
+    "town_slug": "beaune",
+    "target_keyword": "Burgundy weekend itinerary",
+    "notes": "Itinerary. Two days based in Beaune: Côte de Beaune and Côte de Nuits.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-three-days-cote-dor",
+    "target": "articles",
+    "slug": "three-days-cote-dor",
+    "page_type": "itinerary",
+    "region_slug": "burgundy",
+    "target_keyword": "three days in the Côte d'Or",
+    "notes": "Itinerary. Three days from Dijon to Santenay along the Route des Grands Crus.",
+    "stage": "queued"
+  },
+  {
+    "id": "a-five-days-burgundy",
+    "target": "articles",
+    "slug": "five-days-burgundy",
+    "page_type": "itinerary",
+    "region_slug": "burgundy",
+    "target_keyword": "five days in Burgundy",
+    "notes": "Itinerary. Five days: Chablis, Côte d'Or, Côte Chalonnaise and Mâconnais.",
+    "stage": "queued"
+  }
+]

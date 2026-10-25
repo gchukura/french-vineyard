@@ -15,6 +15,8 @@ export type Args = {
   /** Most rows to process; positional `<n>` or `--max n`. */
   max: number;
   dryRun: boolean;
+  /** check: grade only; a failing draft stays drafted instead of being redrafted. */
+  noRedraft?: boolean;
   /** JSON file of Queue rows to use instead of the Queue tab (dry runs). */
   queueFile?: string;
   /** Only these Queue ids. */
@@ -40,6 +42,7 @@ Commands:
 Options:
   --max <n>          same as the positional n (default 10)
   --dry-run          read the Sheet but write nothing; drafts go to pipeline/.dry-run/
+  --no-redraft       check only: grade, and leave a failing draft in drafted
   --queue-file <f>   use Queue rows from a JSON file instead of the Queue tab
   --only <ids>       comma-separated Queue ids
   --budget <usd>     spend cap for this run (default PIPELINE_BUDGET_USD)`;
@@ -63,6 +66,7 @@ export function parseArgs(argv: string[]): Args {
   for (let i = 0; i < rest.length; i++) {
     const arg = rest[i];
     if (arg === "--dry-run") args.dryRun = true;
+    else if (arg === "--no-redraft") args.noRedraft = true;
     else if (arg === "--max") args.max = positiveInt(value(i++, arg), arg);
     else if (arg === "--queue-file") args.queueFile = value(i++, arg);
     else if (arg === "--file") args.file = value(i++, arg);

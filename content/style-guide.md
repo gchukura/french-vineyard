@@ -26,7 +26,7 @@ Readers are English-speaking travelers planning a few days in a French wine regi
 - **Times and durations:** durations as "1 hour 30 minutes" or "90 minutes" in prose, "1h30" only inside tables. Clock times always use the 12-hour clock: "9 a.m.", "2:30 p.m.", "noon", never "14:30" or "14h30", in prose and in tables.
 - **Dates:** "May to September," "from April 1." No ordinals ("1st").
 - **Hedge sparingly.** Opening hours and fees change, but a page full of "ask the estate" is no use to anyone. Use at most two "ask the estate," "check with the tourist office" or "confirm before you go" lines on a page, FAQ included, where they matter most.
-- **No trivia.** Every fact should help the reader plan or enjoy the visit. Leave out administrative facts (population, number of communes, postcodes), road numbers that aren't directions ("Épernay lies on the RN 3"), and history that doesn't change what the reader does.
+- **No trivia.** Leave out road numbers that aren't directions ("Épernay lies on the RN 3") and administrative facts with no planning value (population, postcodes, cantons, which department a town is in). Distances to nearby towns, UNESCO status, how a village is laid out and which villages an appellation covers help the reader, so keep them.
 
 ## Wine and alcohol
 

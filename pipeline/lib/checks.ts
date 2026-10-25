@@ -73,8 +73,8 @@ const SELLING = [
   /\b(free shipping|discount code|promo code|use code|% off)\b/i,
 ];
 
-/** "€25", "€12.50", "€20–35"; ranges count as one amount. */
-const EUR_AMOUNT = /€\s?\d[\d,.]*(?:\s?[–-]\s?€?\d[\d,.]*)?/g;
+/** "€25", "€12.50", "€20–35", "€15 to €65"; ranges count as one amount. */
+const EUR_AMOUNT = /€\s?\d[\d,.]*(?:\s?(?:[–-]|to)\s?€?\d[\d,.]*)?/g;
 
 /**
  * Talk about how the page was made: fact sheets, sources, research, and facts
@@ -337,4 +337,11 @@ function around(text: string, index: number, length: number): string {
     .slice(Math.max(0, index - 40), index + length + 40)
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/** A model finding whose own fix says nothing needs to change. */
+export function isWithdrawn(f: Finding): boolean {
+  return /\b(?:no (?:change|fix|edit)s? (?:is |are )?needed|nothing to (?:change|fix)|(?:this )?finding is withdrawn|withdraw(?:n)? this|dismiss this(?: one)?|this (?:is acceptable|passes)|is correct, so no)\b/i.test(
+    f.fix,
+  );
 }

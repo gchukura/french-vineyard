@@ -101,7 +101,11 @@ async function checkRow(
     if (!row.draft_json) throw new Error("No draft_json on the Queue row; run draft first");
     const draft = JSON.parse(row.draft_json) as Draft;
     const result = await gradeDraft(ctx, row, draft);
-    const outcome = afterCheck(result.passed, row.attempts);
+    // --no-redraft grades only: a fail stays drafted with its findings.
+    const outcome =
+      ctx.args.noRedraft && !result.passed
+        ? { stage: "drafted" as const, attempts: row.attempts, redraft: false }
+        : afterCheck(result.passed, row.attempts);
     await ctx.updateQueue(row, {
       score: String(result.score),
       findings: findingsCell(result.findings),
@@ -120,7 +124,7 @@ async function checkRow(
   }
 }
 
-/** check <n>: drafted -> checked, or redraft once, or needs_review. */
+/** check <n>: drafted -> checked, or redraft (up to MAX_REDRAFTS), or needs_review. */
 export async function check(ctx: Context, max = ctx.args.max): Promise<number> {
   const rows = await ctx.rowsAt("drafted", max);
   ctx.log(`check: ${rows.length} drafted row(s)`);

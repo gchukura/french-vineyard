@@ -73,8 +73,8 @@ const SELLING = [
   /\b(free shipping|discount code|promo code|use code|% off)\b/i,
 ];
 
-/** "€25", "€12.50", "€20–35"; ranges count as one amount. */
-const EUR_AMOUNT = /€\s?\d[\d,.]*(?:\s?[–-]\s?€?\d[\d,.]*)?/g;
+/** "€25", "€12.50", "€20–35", "€15 to €65"; ranges count as one amount. */
+const EUR_AMOUNT = /€\s?\d[\d,.]*(?:\s?(?:[–-]|to)\s?€?\d[\d,.]*)?/g;
 
 /**
  * Talk about how the page was made: fact sheets, sources, research, and facts

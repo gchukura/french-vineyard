@@ -124,10 +124,11 @@ describe("queue", () => {
     );
   });
 
-  it("redrafts once, then sends to review", () => {
+  it("redrafts twice, then sends to review", () => {
     expect(afterCheck(true, 0)).toEqual({ stage: "checked", attempts: 0, redraft: false });
     expect(afterCheck(false, 0)).toEqual({ stage: "drafted", attempts: 1, redraft: true });
-    expect(afterCheck(false, 1)).toEqual({ stage: "needs_review", attempts: 2, redraft: false });
+    expect(afterCheck(false, 1)).toEqual({ stage: "drafted", attempts: 2, redraft: true });
+    expect(afterCheck(false, 2)).toEqual({ stage: "needs_review", attempts: 3, redraft: false });
   });
 
   it("refreshes guides at 6 months and towns at 12", () => {

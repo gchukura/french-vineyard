@@ -95,13 +95,16 @@ export const QUERIES_HEADERS = [
 
 export type CheckOutcome = { stage: Stage; attempts: number; redraft: boolean };
 
+/** Redrafts with the checker's findings before a row goes to needs_review. */
+export const MAX_REDRAFTS = 2;
+
 /**
- * Pass -> checked. First fail -> redraft with the findings (back to drafted).
- * A fail after a redraft -> needs_review.
+ * Pass -> checked. A fail redrafts with the findings (back to drafted), up
+ * to MAX_REDRAFTS times; the fail after that -> needs_review.
  */
 export function afterCheck(passed: boolean, attempts: number): CheckOutcome {
   if (passed) return { stage: "checked", attempts, redraft: false };
-  if (attempts < 1) return { stage: "drafted", attempts: attempts + 1, redraft: true };
+  if (attempts < MAX_REDRAFTS) return { stage: "drafted", attempts: attempts + 1, redraft: true };
   return { stage: "needs_review", attempts: attempts + 1, redraft: false };
 }
 

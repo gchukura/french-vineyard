@@ -21,6 +21,8 @@ export type ContentFiles = {
   styleGuide: string;
   bannedPhrases: string[];
   selectionRules: string;
+  /** Hostnames web search must not return during research. */
+  researchBlocklist: string[];
 };
 
 type SystemBlock = { type: "text"; text: string; cache_control?: { type: "ephemeral" } };
@@ -138,6 +140,25 @@ export function hotelBrief(h: Hotel) {
   };
 }
 
+/**
+ * The fact sheet as the writer and checker see it: no source URLs. They
+ * don't need them, they cost tokens, and they invite talk about sources.
+ */
+export function factsForWriter(facts: StoredFactSheet): unknown {
+  const strip = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.map(strip);
+    if (v && typeof v === "object") {
+      return Object.fromEntries(
+        Object.entries(v as Record<string, unknown>)
+          .filter(([k]) => k !== "sources")
+          .map(([k, x]) => [k, strip(x)]),
+      );
+    }
+    return v;
+  };
+  return strip(facts);
+}
+
 export type DraftBrief = {
   target: Target;
   facts: StoredFactSheet;
@@ -164,7 +185,7 @@ export function draftUserText(brief: DraftBrief): string {
     "# Page",
     JSON.stringify(page, null, 2),
     "# Fact sheet",
-    JSON.stringify(facts, null, 2),
+    JSON.stringify(factsForWriter(facts), null, 2),
     `# Tours (${tours.length}, owner's rank order)`,
     tours.length
       ? JSON.stringify(tours.map(tourBrief), null, 2)

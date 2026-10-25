@@ -51,7 +51,7 @@ export function loadConfig(args: Args): Config {
   return {
     model: process.env.PIPELINE_MODEL || "claude-sonnet-5-5",
     checkModel: process.env.PIPELINE_CHECK_MODEL || "claude-haiku-5-5",
-    budgetUsd: args.budget ?? num("PIPELINE_BUDGET_USD", 5),
+    budgetUsd: args.budget ?? num("PIPELINE_BUDGET_USD", 25),
     usdRate: num("PIPELINE_EUR_USD_RATE", 1.08),
     passScore: num("PIPELINE_PASS_SCORE", 80),
     siteUrl: (
@@ -64,19 +64,21 @@ export function loadConfig(args: Args): Config {
 }
 
 /** Rough per-call ceilings used to stop before the budget is crossed. */
-export const ESTIMATE_USD = { research: 0.5, draft: 0.25, check: 0.02 };
+export const ESTIMATE_USD = { research: 0.35, draft: 0.25, check: 0.02 };
 
 export async function loadContentFiles(): Promise<ContentFiles> {
   const read = (p: string) => readFile(path.join(CONTENT, p), "utf8");
-  const [research, draft, redraft, check, styleGuide, banned, selectionRules] = await Promise.all([
-    read("prompts/research.md"),
-    read("prompts/draft.md"),
-    read("prompts/redraft.md"),
-    read("prompts/check.md"),
-    read("style-guide.md"),
-    read("banned-phrases.txt"),
-    read("selection-rules.md"),
-  ]);
+  const [research, draft, redraft, check, styleGuide, banned, selectionRules, blocklist] =
+    await Promise.all([
+      read("prompts/research.md"),
+      read("prompts/draft.md"),
+      read("prompts/redraft.md"),
+      read("prompts/check.md"),
+      read("style-guide.md"),
+      read("banned-phrases.txt"),
+      read("selection-rules.md"),
+      read("research-blocklist.txt"),
+    ]);
   return {
     research,
     draft,
@@ -85,6 +87,7 @@ export async function loadContentFiles(): Promise<ContentFiles> {
     styleGuide,
     bannedPhrases: parseBannedPhrases(banned),
     selectionRules,
+    researchBlocklist: parseBannedPhrases(blocklist),
   };
 }
 

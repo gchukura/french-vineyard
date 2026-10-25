@@ -36,7 +36,13 @@ export function allowedNumbers(...data: unknown[]): Set<string> {
       }
     } else if (typeof v === "string") {
       // Skip URLs: their digits are ids, not facts.
-      for (const n of numbersIn(v.replace(/https?:\/\/\S+/g, ""))) out.add(n);
+      const text = v.replace(/https?:\/\/\S+/g, "");
+      for (const n of numbersIn(text)) out.add(n);
+      // Clock times ("17:30", "9.30am", "14h00") may be written in 12-hour form.
+      for (const m of text.matchAll(/(?<!\d)([01]?\d|2[0-3])[:h.]([0-5]\d)(?!\d)/g)) {
+        add(Number(m[1]) % 12 || 12);
+        add(Number(m[2]));
+      }
     } else if (Array.isArray(v)) {
       for (const x of v) walk(x, key);
     } else if (v && typeof v === "object") {

@@ -179,6 +179,7 @@ describe("prompt caching", () => {
     styleGuide: "Style",
     bannedPhrases: ["delve"],
     selectionRules: "Rules",
+    researchBlocklist: [],
   };
 
   it("builds the shared system block identically for every row, marked for caching", () => {

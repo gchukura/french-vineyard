@@ -10,9 +10,13 @@ import {
   keepSourced,
   type StoredFactSheet,
 } from "../lib/facts";
+import { withoutBlocked } from "../lib/blocklist";
 import { pool } from "../lib/pool";
 import { researchMessages } from "../lib/prompt";
 import type { QueueRow } from "../lib/queue";
+
+/** Web searches allowed per row; each one adds its results to the call's input tokens. */
+export const MAX_SEARCHES = 6;
 
 export type Research = { facts: StoredFactSheet; dropped: string[]; hash: string };
 
@@ -24,7 +28,14 @@ export async function researchRow(ctx: Context, row: QueueRow): Promise<Research
       model: ctx.config.model,
       max_tokens: 32_000,
       system: ctx.files.research,
-      tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 15 }],
+      tools: [
+        {
+          type: "web_search_20260209",
+          name: "web_search",
+          max_uses: MAX_SEARCHES,
+          blocked_domains: ctx.files.researchBlocklist,
+        },
+      ],
       output_config: { effort: "medium" },
       messages: researchMessages(target),
     },
@@ -41,7 +52,10 @@ export async function researchRow(ctx: Context, row: QueueRow): Promise<Research
       `Research reply was not a valid fact sheet: ${(error as Error).message.slice(0, 300)}`,
     );
   }
-  const { facts, dropped } = keepSourced(parsed, seenUrls(result.turns));
+  const { facts, dropped } = keepSourced(
+    parsed,
+    withoutBlocked(seenUrls(result.turns), ctx.files.researchBlocklist),
+  );
   if (!countFacts(facts)) throw new Error("No facts survived source checking");
   return { facts, dropped, hash: factsHash(facts) };
 }

@@ -23,7 +23,7 @@ Readers are English-speaking travelers planning a few days in a French wine regi
 - **Every number must come from the fact sheet** or from the tour and hotel data you are given. If a number isn't there, write the sentence without it.
 - **No superlatives without a number.** Don't write "the best," "the most famous," "the largest" or "the oldest" unless the same sentence gives the figure that proves it ("the largest house by volume, at 30 million bottles a year"). If you can't prove it, cut it.
 - **Prices in EUR with USD in parentheses**, rounded to whole units: "€25 ($27)". Use the exchange rate in the brief. Write price ranges as "€20–35 ($22–38)".
-- **Times and durations:** "1 hour 30 minutes" or "90 minutes" in prose; "1h30" only inside tables. Use the 12-hour clock with "a.m." and "p.m." in prose.
+- **Times and durations:** durations as "1 hour 30 minutes" or "90 minutes" in prose, "1h30" only inside tables. Clock times always use the 12-hour clock: "9 a.m.", "2:30 p.m.", "noon", never "14:30" or "14h30", in prose and in tables.
 - **Dates:** "May to September," "from April 1." No ordinals ("1st").
 - **Hedge honestly.** Opening hours and fees change. Say "check before you go" once per article, where it matters most, rather than on every line.
 
@@ -46,6 +46,10 @@ Readers are English-speaking travelers planning a few days in a French wine regi
 - Internal links use trailing slashes: `/towns/epernay/`.
 - Never paste a raw booking, tour or hotel URL. Tours and hotels appear only through `<TourCards ids="…" />` and `<HotelCards ids="…" />` with ids you are given.
 - Use `<Callout title="…">` for at most one practical tip per article.
+
+## Write as a guide, not a researcher
+
+Never tell the reader how the page was made. No "not sourced," "unconfirmed," "the sources checked," "according to our research" or "we couldn't find." If something isn't known, leave it out, or send the reader to the people who know: "Ask the estate about fees when you book."
 
 ## Before you finish
 

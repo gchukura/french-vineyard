@@ -69,6 +69,29 @@ const SELLING = [
 /** "€25", "€12.50", "€20–35"; ranges count as one amount. */
 const EUR_AMOUNT = /€\s?\d[\d,.]*(?:\s?[–-]\s?€?\d[\d,.]*)?/g;
 
+/**
+ * Talk about how the page was made: fact sheets, sources, research, and facts
+ * that were "not found" or "unconfirmed". Readers should never see it.
+ */
+const META_LANGUAGE = [
+  /\bfact[- ]sheets?\b/i,
+  /\bthe brief\b/i,
+  /\b(?:un)?sourced\b/i,
+  /\bun(?:confirmed|verified)\b/i,
+  /\b(?:not|never|n['’]t)\s+(?:been\s+|yet\s+)?(?:confirmed|verified|found|published|stated|listed)\b/i,
+  /\bno\s+(?:\S+\s+){0,6}?(?:was|were|is|are)\s+(?:confirmed|verified|found|published|given|stated)\b/i,
+  /\b(?:the|our|these|available|official)\s+sources?\b/i,
+  /\bsources?\s+(?:checked|consulted|for this|give|gives|say|says|state|states|list|lists|found|differ)\b/i,
+  /\b(?:our|the|this)\s+research\b/i,
+  /\b(?:we|I)\s+(?:could not|couldn['’]t|did not|didn['’]t)\s+(?:find|confirm|verify)\b/i,
+];
+
+/** "9:00", "14:30" without a.m./p.m., and French-style "14h30" (10h and up, so "1h30" durations pass). */
+const TWENTY_FOUR_HOUR = [
+  /\b(?:[01]?\d|2[0-3]):[0-5]\d\b(?!\s?[ap]\.?\s?m\b)/gi,
+  /\b(?:1\d|2[0-3])h(?:[0-5]\d)?\b/g,
+];
+
 const RAW_AFFILIATE = /https?:\/\/(www\.)?(getyourguide|viator|booking|expedia|winalist)\.[a-z.]+/i;
 
 export type CheckInput = {
@@ -217,6 +240,27 @@ export function runChecks({
       err("no_alcohol_selling", m[0], "Remove language that encourages buying or shipping wine.");
   }
 
+  for (const re of META_LANGUAGE) {
+    const m = readable.match(re);
+    if (m) {
+      err(
+        "no_meta_language",
+        around(readable, m.index!, m[0].length),
+        "Don't mention sources, research or what wasn't found; leave the fact out or tell the reader to check with the estate or tourist office.",
+      );
+    }
+  }
+
+  for (const re of TWENTY_FOUR_HOUR) {
+    for (const m of readable.matchAll(re)) {
+      err(
+        "twelve_hour_times",
+        m[0],
+        `Write "${m[0]}" as a 12-hour time, e.g. "9 a.m." or "2:30 p.m.".`,
+      );
+    }
+  }
+
   // Style guide: every euro amount is followed by its USD conversion, "€25 ($27)".
   for (const m of readable.matchAll(EUR_AMOUNT)) {
     if (!/^\s*\((?:US)?\$/.test(readable.slice(m.index! + m[0].length))) {
@@ -229,4 +273,12 @@ export function runChecks({
     err("cards_valid", raw[0], "Never link to providers directly; use <TourCards>/<HotelCards>.");
 
   return { findings, wordCount: words };
+}
+
+/** The match with a little context either side, for a readable finding. */
+function around(text: string, index: number, length: number): string {
+  return text
+    .slice(Math.max(0, index - 40), index + length + 40)
+    .replace(/\s+/g, " ")
+    .trim();
 }

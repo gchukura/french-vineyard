@@ -21,7 +21,7 @@ Options: `--max <n>` (or a positional `n`), `--dry-run`, `--queue-file <json>` (
 
 - **Sheet access.** The pipeline's only Sheet code is `pipeline/sheet.ts`, using its own write-enabled service account. The site still reads only through `lib/sheets.ts` with the read-only account. Rows are validated with the site's own schemas in `lib/sheet-schema.ts`.
 - **Tours are the owner's.** `draft` filters the owner-curated Tours tab (published rows matching the page's region, town and Queue `category`) in the owner's `rank` order. It never adds, chooses or reorders tours, and `check` rejects any `<TourCards>` id that isn't a published, curated row. A ranked list with no matching tours goes to `needs_review` instead of being drafted.
-- **Sourced facts only.** Research facts must cite a URL that web search actually returned in that run; anything else is dropped (the Facts tab's `dropped_json` lists what). Drafts may only use numbers from the fact sheet, tours and hotels; `check` enforces it.
+- **Sourced facts only.** Research facts must cite a URL that web search actually returned in that run; anything else is dropped (the Facts tab's `dropped_json` lists what). Research gets 6 searches per row, and the domains in `content/research-blocklist.txt` (Rome2rio, Tripadvisor, Wanderlog, booking platforms and similar) are excluded from search and never count as a source. The writer and checker see the fact sheet without its source URLs. Drafts may only use numbers from the fact sheet, tours and hotels; `check` enforces it.
 - **Live pages never show unchecked drafts.** Every draft is stored in `Queue.draft_json`. It is also written to the content tab straight away, but only while that row isn't published. `publish` copies the checked draft over, so a refresh of a live page only goes live once it passes.
 - **Dry runs can't write.** `--dry-run` requests a read-only OAuth scope, records every planned write in `writes.json` and skips the revalidate call.
 
@@ -37,7 +37,7 @@ published ──refresh (facts changed)──▶ researched ──▶ … ──
 
 | Command    | Picks rows at                                       | Does                                                                                                                                                                                                                                                                                                     | Moves to                                           |
 | ---------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| `research` | `queued`                                            | Sonnet-class model with web search and `content/prompts/research.md`. Writes the fact sheet to Facts.                                                                                                                                                                                                    | `researched`                                       |
+| `research` | `queued`                                            | Sonnet-class model with web search (6 searches, blocklisted domains excluded) and `content/prompts/research.md`. Writes the fact sheet to Facts.                                                                                                                                                         | `researched`                                       |
 | `draft`    | `researched`                                        | Builds the prompt from `prompts/draft.md`, `style-guide.md`, `banned-phrases.txt`, `templates/{page_type}.md` (towns use `town.md`) and the fact sheet. Single streamed calls up to 20 rows, the Message Batches API (half price) above 20. The shared system prompt and the template are prompt-cached. | `drafted`                                          |
 | `check`    | `drafted`                                           | Deterministic checks, then a Haiku-class grade with `prompts/check.md`. Writes `score` and `findings`. On a first fail it redrafts at once with the findings appended (`prompts/redraft.md`) and grades again.                                                                                           | `checked`, or `needs_review` after the second fail |
 | `publish`  | `checked`                                           | Copies the draft to Articles/Towns, sets `status=published`, `published_at`, `refresh_after` (6 months for articles, 12 for towns), then one POST to `/api/revalidate` with the touched tabs' tags (`sheet-articles`, `sheet-towns`).                                                                    | `published`                                        |
@@ -57,7 +57,10 @@ Deterministic (`pipeline/lib/checks.ts`), each failure an error:
 - every `<TourCards>` id is a published Tours row curated for this page; every `<HotelCards>` id is in Hotels; no raw GetYourGuide, Viator, Booking.com, Expedia or Winalist URLs;
 - ranked lists: exactly one H2 per curated tour, titles matching, in rank order;
 - no "I", "my" or "me", and no "we", "our" or "us" outside a `<MethodologyBox>`;
-- no wine-selling language ("buy bottles", "ship them home", discount codes).
+- no wine-selling language ("buy bottles", "ship them home", discount codes);
+- no meta-language about how the page was made ("fact sheet", "not sourced", "unconfirmed", "the sources");
+- no 24-hour clock times ("9:00", "14:30", "14h30"); write "9 a.m.", "2:30 p.m.";
+- every euro amount followed by its USD conversion, "€25 ($27)".
 
 The model then grades the same rules plus unsourced claims and style. A draft passes when there are no deterministic errors, the model passes it, and the score (the model's score minus 10 per deterministic error) is at least `PIPELINE_PASS_SCORE` (default 80).
 
@@ -131,7 +134,7 @@ You fill `id`, `target`, `slug` and the page columns; the pipeline fills the res
 | `PIPELINE_SHEET_ID`                                                      | `GOOGLE_SHEET_ID`      |                                                                                                                                                                                                    |
 | `PIPELINE_MODEL`                                                         | `claude-sonnet-5-5`    | Research and drafting.                                                                                                                                                                             |
 | `PIPELINE_CHECK_MODEL`                                                   | `claude-haiku-5-5`     | Grading.                                                                                                                                                                                           |
-| `PIPELINE_BUDGET_USD`                                                    | `5`                    | Spend cap per invocation. Each call reserves a ceiling first (research $0.50, draft $0.25, check $0.02) and the stage stops when the next one wouldn't fit. Publish costs nothing and always runs. |
+| `PIPELINE_BUDGET_USD`                                                    | `25`                   | Spend cap per invocation. Each call reserves a ceiling first (research $0.35, draft $0.25, check $0.02) and the stage stops when the next one wouldn't fit. Publish costs nothing and always runs. |
 | `PIPELINE_EUR_USD_RATE`                                                  | `1.08`                 | Rate given to the writer and used to verify USD conversions.                                                                                                                                       |
 | `PIPELINE_PASS_SCORE`                                                    | `80`                   | Minimum check score.                                                                                                                                                                               |
 | `SITE_URL`                                                               | `NEXT_PUBLIC_SITE_URL` | Where to POST `/api/revalidate`.                                                                                                                                                                   |
@@ -155,7 +158,7 @@ pipeline/
 content/
   prompts/            research.md, draft.md, redraft.md, check.md
   templates/          guide, ranked_list, hotel_roundup, itinerary, practical, town
-  style-guide.md, banned-phrases.txt, selection-rules.md
+  style-guide.md, banned-phrases.txt, selection-rules.md, research-blocklist.txt
 ```
 
 Template frontmatter: `target` (`articles` or `towns`), `words` (`min-max`), `required_headings` and `required_components` (`|`-separated), optional `max_tables`, `h2_per_tour: true` (ranked lists) and `schema_type`.

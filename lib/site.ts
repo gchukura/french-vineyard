@@ -1,3 +1,5 @@
+import { isNoindex } from "@/lib/noindex";
+
 /** Site-wide constants and URL builders. Every internal path ends in "/". */
 
 export const SITE_NAME = "FrenchVineyard.com";
@@ -6,6 +8,9 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://frenchvine
   "",
 );
 export const DEFAULT_OG_IMAGE = "/og-default.jpg";
+
+/** Pre-launch: robots.txt disallows everything and every response carries X-Robots-Tag: noindex. */
+export const SITE_NOINDEX = isNoindex(process.env.SITE_NOINDEX);
 
 export type NavItem = { label: string; href: string };
 

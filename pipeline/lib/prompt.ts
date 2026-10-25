@@ -67,7 +67,19 @@ const PAGE_LABEL = {
   subregions: "wine area page",
 } as const;
 
-export function researchMessages(target: Target) {
+/**
+ * Added to the second research attempt when the first was too thin to draft
+ * from. Names the reason and points at the listings that usually cover it.
+ */
+export function researchRetryHint(reason: string): string {
+  return [
+    "A first research attempt for this page was too thin to write from:",
+    reason,
+    "Start this time from the official tourist office's pages that list estates, cellars and visits for this place; one listing page usually covers several estates with their visit type and fee. For trains, use SNCF Connect. If the place has no tourist office of its own, use the one for the nearest town or the area. Cite only pages you open in this research.",
+  ].join("\n\n");
+}
+
+export function researchMessages(target: Target, hint?: string) {
   const { row } = target;
   const brief = {
     page: row.target === "articles" ? `${row.page_type} article` : PAGE_LABEL[row.target],
@@ -82,7 +94,10 @@ export function researchMessages(target: Target) {
   return [
     {
       role: "user" as const,
-      content: `Research this page and return the fact sheet.\n\n${JSON.stringify(brief, null, 2)}`,
+      content: [
+        `Research this page and return the fact sheet.\n\n${JSON.stringify(brief, null, 2)}`,
+        ...(hint ? [hint] : []),
+      ].join("\n\n"),
     },
   ];
 }

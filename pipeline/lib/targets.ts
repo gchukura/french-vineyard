@@ -70,6 +70,19 @@ export function contentPatch(
   }
 }
 
+/**
+ * Wine areas and towns are hidden on the site until their region is
+ * published (lib/data.ts), so publish holds them back until it is.
+ */
+export function waitsForRegion(target: PageTarget): boolean {
+  return target === "subregions" || target === "towns";
+}
+
+/** Regions first, so their wine areas and towns can follow in the same run. */
+export function orderForPublish<T extends { target: PageTarget }>(rows: T[]): T[] {
+  return [...rows].sort((a, b) => Number(b.target === "regions") - Number(a.target === "regions"));
+}
+
 /** Whether the tab has an updated_at column (SubRegions doesn't). */
 export function hasUpdatedAt(target: PageTarget): boolean {
   return target !== "subregions";

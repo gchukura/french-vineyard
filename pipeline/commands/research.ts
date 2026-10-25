@@ -12,16 +12,22 @@ import {
 } from "../lib/facts";
 import { withoutBlocked } from "../lib/blocklist";
 import { pool } from "../lib/pool";
-import { researchMessages } from "../lib/prompt";
+import { researchMessages, researchRetryHint } from "../lib/prompt";
 import type { QueueRow } from "../lib/queue";
+import { researchGate } from "../lib/targets";
 
 /** Web searches allowed per row; each one adds its results to the call's input tokens. */
 export const MAX_SEARCHES = 8;
 
 export type Research = { facts: StoredFactSheet; dropped: string[]; hash: string };
 
-/** Researches one row and returns the sourced fact sheet. Writes nothing. */
-export async function researchRow(ctx: Context, row: QueueRow): Promise<Research> {
+/** Research that produced nothing usable: an unparseable reply or no sourced facts. */
+export class ResearchUnusable extends Error {
+  name = "ResearchUnusable";
+}
+
+/** Researches one row and returns the sourced fact sheet. Writes nothing but the usage log. */
+export async function researchRow(ctx: Context, row: QueueRow, hint?: string): Promise<Research> {
   const target = await ctx.target(row);
   const result = await ctx.claude.call(
     {
@@ -37,18 +43,18 @@ export async function researchRow(ctx: Context, row: QueueRow): Promise<Research
         },
       ],
       output_config: { effort: "medium" },
-      messages: researchMessages(target),
+      messages: researchMessages(target, hint),
     },
     ESTIMATE_USD.research,
   );
-  await ctx.recordUsage(row, "research", result);
+  await ctx.recordUsage(row, hint ? "research-retry" : "research", result);
 
   const reply = textOf(result.message.content);
   let parsed;
   try {
     parsed = factSheetSchema.parse(extractJsonBlock(reply));
   } catch (error) {
-    throw new Error(
+    throw new ResearchUnusable(
       `Research reply was not a valid fact sheet: ${(error as Error).message.slice(0, 300)}`,
     );
   }
@@ -56,8 +62,36 @@ export async function researchRow(ctx: Context, row: QueueRow): Promise<Research
     parsed,
     withoutBlocked(seenUrls(result.turns), ctx.files.researchBlocklist),
   );
-  if (!countFacts(facts)) throw new Error("No facts survived source checking");
+  if (!countFacts(facts)) throw new ResearchUnusable("No facts survived source checking");
   return { facts, dropped, hash: factsHash(facts) };
+}
+
+/**
+ * Research with one automatic retry: when the fact sheet is too thin to draft
+ * (the fact gate) or nothing usable came back, research again with a hint to
+ * start from the tourist office's estate and visit listings. Keeps whichever
+ * attempt kept more facts; the draft step's gate still has the final say.
+ */
+export async function researchWithRetry(ctx: Context, row: QueueRow): Promise<Research> {
+  let first: Research | undefined;
+  let reason: string;
+  try {
+    first = await researchRow(ctx, row);
+    const thin = researchGate(first.facts, row);
+    if (!thin) return first;
+    reason = thin;
+  } catch (error) {
+    if (!(error instanceof ResearchUnusable)) throw error;
+    reason = error.message;
+  }
+  ctx.log(`${row.id} retrying research once: ${reason}`);
+  try {
+    const second = await researchRow(ctx, row, researchRetryHint(reason));
+    return !first || countFacts(second.facts) >= countFacts(first.facts) ? second : first;
+  } catch (error) {
+    if (first && error instanceof ResearchUnusable) return first;
+    throw error;
+  }
 }
 
 export async function saveFacts(ctx: Context, row: QueueRow, r: Research) {
@@ -81,7 +115,7 @@ export async function research(ctx: Context, max = ctx.args.max): Promise<number
   await pool(rows, 3, async (row) => {
     if (stopped) return;
     try {
-      const r = await researchRow(ctx, row);
+      const r = await researchWithRetry(ctx, row);
       await saveFacts(ctx, row, r);
       await ctx.updateQueue(row, { stage: "researched", facts_hash: r.hash, error: "" });
       ctx.log(

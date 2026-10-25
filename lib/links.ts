@@ -8,10 +8,15 @@ export type AffiliateProvider = (typeof AFFILIATE_PROVIDERS)[number];
 
 export const AFFILIATE_REL = "sponsored nofollow";
 
-export function goHref(provider: AffiliateProvider, id: string): string {
+/**
+ * `slot` names where on the page the link sits ("tour-card", "header"), so
+ * the Clicks log can tell placements apart. Lowercase letters, digits, dashes.
+ */
+export function goHref(provider: AffiliateProvider, id: string, slot?: string): string {
   const trimmed = id.trim();
   if (!trimmed) throw new Error(`Affiliate link for ${provider} needs an id`);
-  return `/go/${provider}/${encodeURIComponent(trimmed)}/`;
+  const path = `/go/${provider}/${encodeURIComponent(trimmed)}/`;
+  return slot ? `${path}?slot=${encodeURIComponent(slot)}` : path;
 }
 
 /** True for any path that goes through the /go/ redirector. */

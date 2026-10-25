@@ -95,6 +95,55 @@ html:not([data-consent]) body {
   }
 }
 
+/* MDX from the Sheet. Direct children only, so embedded components
+   (cards, tables, callouts) keep their own styles. */
+.prose-fv {
+  max-width: 70ch;
+  line-height: 1.7;
+}
+.prose-fv > * + * {
+  margin-top: 1em;
+}
+.prose-fv > h2 {
+  margin-top: 2.2em;
+  font-size: 1.75rem;
+  line-height: 1.25;
+}
+.prose-fv > h3 {
+  margin-top: 1.8em;
+  font-size: 1.3rem;
+}
+.prose-fv > ul,
+.prose-fv > ol {
+  padding-left: 1.25em;
+}
+.prose-fv > ul {
+  list-style: disc;
+}
+.prose-fv > ol {
+  list-style: decimal;
+}
+.prose-fv > ul li::marker,
+.prose-fv > ol li::marker {
+  color: var(--tag);
+}
+.prose-fv a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+[data-theme="dark"] .prose-fv a {
+  color: var(--accent);
+}
+.prose-fv > blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 1em;
+  color: var(--muted);
+}
+.prose-fv .not-prose {
+  max-width: none;
+}
+
 .maplibregl-popup-content {
   background: var(--surface);
   color: var(--foreground);

@@ -27,7 +27,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "FrenchVineyard.com",
+  title: { default: "FrenchVineyard.com", template: "%s | FrenchVineyard.com" },
   description: "An English-language travel guide to the wine regions of France.",
 };
 

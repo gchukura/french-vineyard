@@ -1,5 +1,5 @@
 import { JsonLd } from "@/components/JsonLd";
-import { faqPageJsonLd, type FaqItem } from "@/lib/jsonld";
+import { faqPage, type FaqItem } from "@/lib/schema";
 
 /** Native <details> FAQ. Emits FAQPage JSON-LD for exactly the questions shown. */
 export function Faq({
@@ -32,7 +32,7 @@ export function Faq({
           </details>
         ))}
       </div>
-      {jsonLd ? <JsonLd data={faqPageJsonLd(items)} /> : null}
+      {jsonLd ? <JsonLd data={faqPage(items)} /> : null}
     </section>
   );
 }

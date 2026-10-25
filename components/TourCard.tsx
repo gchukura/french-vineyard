@@ -26,7 +26,16 @@ export type TourCardTour = Pick<
  * A tour from the owner-curated Tours tab. Pages pass rows they were told to
  * show (an article's tour_ids); this component never picks tours itself.
  */
-export function TourCard({ tour, pickup }: { tour: TourCardTour; pickup?: string }) {
+export function TourCard({
+  tour,
+  pickup,
+  slot = "tour-card",
+}: {
+  tour: TourCardTour;
+  pickup?: string;
+  /** Placement name for the Clicks log. */
+  slot?: string;
+}) {
   const meta = [
     tour.price_from_eur != null ? `From ${formatEur(tour.price_from_eur)}` : null,
     tour.duration,
@@ -80,7 +89,7 @@ export function TourCard({ tour, pickup }: { tour: TourCardTour; pickup?: string
           </p>
         ) : null}
         <div className="mt-auto pt-5">
-          <ButtonLink href={goHref(tour.provider, tour.id)} className="w-full">
+          <ButtonLink href={goHref(tour.provider, tour.id, slot)} className="w-full">
             See tour details
           </ButtonLink>
         </div>

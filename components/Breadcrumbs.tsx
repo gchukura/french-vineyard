@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { JsonLd } from "@/components/JsonLd";
-import { breadcrumbJsonLd, type Crumb } from "@/lib/jsonld";
+import { breadcrumbList, type Crumb } from "@/lib/schema";
 
 /** Visible trail plus matching BreadcrumbList JSON-LD. The last item is the current page. */
 export function Breadcrumbs({ items, jsonLd = true }: { items: Crumb[]; jsonLd?: boolean }) {
@@ -29,7 +29,7 @@ export function Breadcrumbs({ items, jsonLd = true }: { items: Crumb[]; jsonLd?:
           );
         })}
       </ol>
-      {jsonLd ? <JsonLd data={breadcrumbJsonLd(items)} /> : null}
+      {jsonLd ? <JsonLd data={breadcrumbList(items)} /> : null}
     </nav>
   );
 }

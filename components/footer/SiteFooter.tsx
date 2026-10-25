@@ -2,15 +2,9 @@ import Link from "next/link";
 
 import { ConsentSettingsButton } from "@/components/consent/ConsentSettingsButton";
 import { Wordmark } from "@/components/header/SiteHeader";
-import { NAV, REGIONS_INDEX_HREF, regionHref } from "@/lib/site";
+import { LEGAL_LINKS, NAV, REGIONS_INDEX_HREF, regionHref } from "@/lib/site";
 
-const ABOUT = [
-  { label: "About us", href: "/about/" },
-  { label: "How we pick tours", href: "/how-we-pick/" },
-  { label: "Affiliate disclosure", href: "/affiliate-disclosure/" },
-  { label: "Privacy policy", href: "/privacy/" },
-  { label: "Contact", href: "/contact/" },
-];
+const ABOUT = LEGAL_LINKS;
 
 const linkClass = "inline-flex min-h-8 items-center hover:text-primary dark:hover:text-accent";
 

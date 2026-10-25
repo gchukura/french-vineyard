@@ -35,7 +35,7 @@ export function ConsentBannerView({
           We&rsquo;d like to count visits with Plausible, a privacy-friendly analytics tool. It sets
           no cookies and only runs if you accept.{" "}
           {/* Shown on every first visit, so don't prefetch it on every page view. */}
-          <Link href="/privacy/" prefetch={false} className="underline underline-offset-2">
+          <Link href="/privacy-policy/" prefetch={false} className="underline underline-offset-2">
             Privacy policy
           </Link>
         </p>

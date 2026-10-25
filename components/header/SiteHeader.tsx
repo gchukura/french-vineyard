@@ -42,7 +42,11 @@ export function SiteHeader({
           ))}
         </nav>
 
-        <ButtonLink href={goHref("gyg", "home")} size="compact" className="ml-auto lg:ml-2">
+        <ButtonLink
+          href={goHref("gyg", "home", "header")}
+          size="compact"
+          className="ml-auto lg:ml-2"
+        >
           Book a Tour
         </ButtonLink>
 

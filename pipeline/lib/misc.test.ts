@@ -216,4 +216,18 @@ describe("parseArgs", () => {
     expect(() => parseArgs(["run", "--queue-file", "q.json"])).toThrow(/dry-run/);
     expect(() => parseArgs(["run", "--max", "0"])).toThrow();
   });
+
+  it("allows --redo only for images with named slugs", () => {
+    expect(parseArgs(["images", "--redo", "--only", "reims,troyes"])).toMatchObject({
+      redo: true,
+      only: ["reims", "troyes"],
+    });
+    expect(() => parseArgs(["images", "--redo"])).toThrow(/--only/);
+    expect(() => parseArgs(["run", "--redo", "--only", "a"])).toThrow(/images/);
+    expect(parseArgs(["images", "--from", "p.json", "--only", "Towns/a"])).toMatchObject({
+      from: "p.json",
+      only: ["Towns/a"],
+    });
+    expect(() => parseArgs(["images", "--from", "p.json"])).toThrow(/--only/);
+  });
 });

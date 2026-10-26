@@ -2,7 +2,60 @@ import { describe, expect, it } from "vitest";
 
 import type { ImageTarget } from "../lib/images";
 import { SheetStore } from "../sheet";
-import { shareParent } from "./images";
+import { detach, isAccountLimit, named, reviewedPicks, shareParent, type Choice } from "./images";
+
+describe("reviewedPicks", () => {
+  const pick = (tab: ImageTarget["tab"], slug: string, outcome: Choice["outcome"]) =>
+    ({
+      target: { tab, slug, name: slug, path: `/${slug}/`, parents: [] },
+      outcome,
+      candidates: 8,
+      ...(outcome === "picked" ? { chosen: { sourceUrl: `https://src/${slug}` } } : {}),
+    }) as Choice;
+  const picks = [
+    pick("SubRegions", "chablis", "picked"),
+    pick("Towns", "chablis", "picked"),
+    pick("Articles", "a", "picked"),
+    pick("Articles", "b", "parent"),
+  ];
+
+  it("keeps only the named picks, telling apart rows that share a slug", () => {
+    expect([...reviewedPicks(picks, ["SubRegions/chablis", "Articles/a"]).keys()]).toEqual([
+      "SubRegions/chablis",
+      "Articles/a",
+    ]);
+  });
+
+  it("refuses a name with no reviewed pick, including pages that kept sharing", () => {
+    expect(() => reviewedPicks(picks, ["Articles/a", "Articles/b"])).toThrow(/Articles\/b/);
+    expect(() => reviewedPicks(picks, ["Articles/typo"])).toThrow(/typo/);
+  });
+});
+
+describe("isAccountLimit", () => {
+  it("recognizes a used-up spend limit or credit balance, not other errors", () => {
+    const limit = new Error(
+      '400 {"type":"error","error":{"type":"invalid_request_error","message":"You have reached your specified API usage limits. You will regain access on 2026-11-01 at 00:00 UTC."}}',
+    );
+    expect(isAccountLimit(limit)).toBe(true);
+    expect(isAccountLimit(new Error("Your credit balance is too low to access the API"))).toBe(
+      true,
+    );
+    expect(isAccountLimit(new Error("429 rate_limit_error"))).toBe(false);
+    expect(isAccountLimit(undefined)).toBe(false);
+  });
+});
+
+describe("named", () => {
+  it("matches --only by slug or by Tab/slug", () => {
+    const area = { tab: "SubRegions" as const, slug: "chablis" };
+    const town = { tab: "Towns" as const, slug: "chablis" };
+    expect(named(["chablis"], area) && named(["chablis"], town)).toBe(true);
+    expect(named(["SubRegions/chablis"], area)).toBe(true);
+    expect(named(["SubRegions/chablis"], town)).toBe(false);
+    expect(named(undefined, town)).toBe(false);
+  });
+});
 
 const HERO = [
   "slug",
@@ -84,5 +137,28 @@ describe("shareParent", () => {
     });
     expect(await shareParent({ store }, troyes)).toBeUndefined();
     expect((await store.rows("Towns"))[0].hero_image).toBe("");
+  });
+});
+
+describe("detach", () => {
+  const shared = () =>
+    storeWith({
+      Towns: [{ slug: "troyes", status: "published", hero_image: "https://blob/champagne.webp" }],
+      Images: [
+        { url: "https://blob/champagne.webp", used_on: "/regions/champagne/, /towns/troyes/" },
+      ],
+    });
+
+  it("takes a redone page off the Images line of the hero it had", async () => {
+    const store = shared();
+    await detach({ store }, troyes, "https://blob/troyes.webp");
+    expect((await store.rows("Images"))[0].used_on).toBe("/regions/champagne/");
+  });
+
+  it("leaves the line alone when the hero doesn't change", async () => {
+    const store = shared();
+    await detach({ store }, troyes, "https://blob/champagne.webp");
+    expect((await store.rows("Images"))[0].used_on).toBe("/regions/champagne/, /towns/troyes/");
+    expect(store.writes).toEqual([]);
   });
 });

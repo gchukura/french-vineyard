@@ -124,6 +124,7 @@ const heroImage = {
   hero_image: optionalText,
   hero_credit: optionalText,
   hero_license: optionalText,
+  hero_source_url: optionalText,
   hero_is_ai: bool,
 };
 

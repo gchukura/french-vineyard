@@ -158,10 +158,10 @@ export async function getConfigRows(): Promise<ConfigRow[]> {
   return parseTab("Config", all.Config, configSchema);
 }
 
-export async function getImages(): Promise<ImageRow[]> {
+export async function getImages(options: LoadOptions = {}): Promise<ImageRow[]> {
   "use cache";
   cacheLife("max");
   cacheTag(sheetTag("Images"));
   const all = await fetchAllTabs();
-  return parseTab("Images", all.Images, imageSchema);
+  return parseTab("Images", all.Images, imageSchema, options);
 }

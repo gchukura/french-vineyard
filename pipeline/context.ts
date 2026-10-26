@@ -67,7 +67,13 @@ export function loadConfig(args: Args): Config {
 }
 
 /** Rough per-call ceilings used to stop before the budget is crossed. */
-export const ESTIMATE_USD = { research: 0.35, draft: 0.25, check: 0.08 }; // check is per pass; two run per draft
+export const ESTIMATE_USD = {
+  research: 0.35,
+  draft: 0.25,
+  check: 0.08, // per pass; two run per draft
+  imageScore: 0.06, // up to eight 768 px previews
+  flux: 0.08, // one FLUX.2 [pro] image at 2400×1344, charged at this flat rate
+};
 
 export async function loadContentFiles(): Promise<ContentFiles> {
   const read = (p: string) => readFile(path.join(CONTENT, p), "utf8");

@@ -41,5 +41,7 @@ yarn-error.log*
 next-env.d.ts
 !.env.example
 
-# pipeline dry-run reports
+# pipeline dry-run reports, image run reports and API caches
 /pipeline/.dry-run/
+/pipeline/.images/
+/pipeline/.cache/

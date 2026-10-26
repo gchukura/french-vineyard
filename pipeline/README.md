@@ -11,12 +11,14 @@ npm run pipeline -- publish 5
 npm run pipeline -- refresh 5            # published rows past refresh_after
 npm run pipeline -- run --max 30         # research, draft, check, publish under one budget
 npm run pipeline -- seed --file pipeline/launch-queue.json   # append Queue rows (skips existing ids)
+npm run pipeline -- images 20            # hero images for published rows with no hero_image
+npm run pipeline -- images 5 --dry-run   # same, but files land in pipeline/.dry-run/images-<time>/
 
 # Read the Sheet, call the API, write nothing. Drafts land in pipeline/.dry-run/<time>/.
 npm run pipeline -- run --max 3 --dry-run --queue-file pipeline/fixtures/dry-run-queue.json
 ```
 
-Options: `--max <n>` (or a positional `n`), `--dry-run`, `--no-redraft` (check only), `--queue-file <json>` (dry runs only: Queue rows from a file instead of the tab), `--only <id,id>`, `--budget <usd>`.
+Options: `--max <n>` (or a positional `n`), `--dry-run`, `--no-redraft` (check only), `--queue-file <json>` (dry runs only: Queue rows from a file instead of the tab), `--only <id,id>` (Queue ids; for `images`, row slugs), `--budget <usd>`.
 
 ## Rules the pipeline keeps
 
@@ -73,6 +75,22 @@ Deterministic (`pipeline/lib/checks.ts`), each failure an error:
 - American English words and spellings ("rental car" not "hire car", "center" not "centre", "meter" not "metre"); FAQ questions may use "I" ("Do I need to book?"), nothing else may.
 
 The model then grades the same rules plus unsourced claims and style. A draft passes when there are no deterministic errors, the model passes it, and the score (the model's score minus 10 per deterministic error) is at least `PIPELINE_PASS_SCORE` (default 80).
+
+## Hero images (`images`)
+
+`images [n]` gives up to n published Regions, SubRegions, Towns and Articles rows with an empty `hero_image` a hero, in that tab order. It doesn't touch the Queue.
+
+1. **Search**, filling up to 8 candidates in this order, with the queries from `searchQueries` (place name + "vineyards", "vignoble"/"vignes"; for articles the title's subject, then the region):
+   - **Wikimedia Commons** API with a descriptive User-Agent carrying `IMAGES_CONTACT_EMAIL`. Kept only when the licence is CC0, CC BY, CC BY-SA or public domain, the file is JPEG/PNG/WebP/TIFF, landscape (width/height ≥ 1.25), at least 1600 px wide, under 50 MB, and not personality-restricted.
+   - **Pixabay** (`PIXABAY_API_KEY`), responses cached 24 hours in `pipeline/.cache/pixabay/`, files downloaded, never hotlinked. Standard keys only get 1280 px files, below the 1600 px floor, so Pixabay contributes only with full API access (`fullHDURL`/`imageURL`).
+   - **Pexels** (`PEXELS_API_KEY`), with photographer, photographer URL and photo URL kept as attribution.
+     Images already on the site (Images `source_url`, rows' `hero_source_url`) are skipped, so pages don't share a hero.
+2. **Score**: one vision call (`PIPELINE_IMAGE_MODEL`, default `PIPELINE_MODEL`) sees 768 px previews of every candidate with their source titles, `content/prompts/image-score.md` and `content/image-brief.md` (warm light, low horizon, vineyard or cellar subject; hard rejects for people drinking, raised glasses, parties, logos and labels). It returns a 0–100 score, reject reason and alt text per candidate. The best unrejected candidate at or above `IMAGES_MIN_SCORE` (default 70) wins. About $0.02 a row.
+3. **Store**: the original is downloaded and converted with sharp to AVIF and WebP at 640, 1024, 1600 and 2400 px (never upscaled, so a 1920 px source stops at 1600). EXIF, ICC and XMP are kept; WebP and AVIF can't carry an IPTC-IIM block, so when the source has no XMP a packet with IPTC Core creator, credit, rights and source is added. Files go to Vercel Blob at `images/<tab>/<slug>-<hash>-<width>.<ext>`.
+4. **Write**: the row gets `hero_image` (the largest WebP; next/image resizes it to the site's widths), `hero_credit`, `hero_license`, `hero_source_url` and `hero_is_ai=FALSE`; the Images tab gets `url`, `alt`, `credit`, `license`, `source_url`, `is_ai`, `used_on` (the page path). Missing `hero_source_url` and Images columns are added. One revalidate call follows.
+5. **Generate, rarely**: with no pick, a row that names no real place gets a FLUX image (`BFL_API_KEY`, `FLUX_MODEL`, default `flux-2-pro`, 2400×1344) from the brief's "generated images" section plus the page topic. It is scored like a photo and kept only if it passes, with `hero_is_ai=TRUE` and an XMP digital-source-type of `trainedAlgorithmicMedia`. A row names a real place when it is a region, wine area or town page, an article with a town, an article whose title or slug contains any region, wine-area or town name (or France or Paris), or the scorer says the topic names a place. Any one of those rules out generation; such rows are left without a hero and listed as `none` in the report.
+
+Every run writes `picks.md` and `picks.json` (all candidates, scores, notes, the pick, credit and alt) with each pick's preview under `pipeline/.images/images-<time>/`, or `pipeline/.dry-run/images-<time>/` for a dry run, where the AVIF and WebP files are saved instead of uploaded. The site shows the credit with `components/ImageCredit.tsx` under every hero, and `/image-credits/` lists every Images row.
 
 ## Tabs
 
@@ -154,6 +172,13 @@ Place pages (towns, regions, sub-regions) render their own tours, hotels, estate
 | `SITE_URL`                                                               | `NEXT_PUBLIC_SITE_URL` | Where to POST `/api/revalidate/`. Until the domain is live, the `SITE_URL` repo variable is `https://french-vineyard.vercel.app`; see `docs/DOMAIN.md`.                                                                           |
 | `REVALIDATE_SECRET`                                                      |                        | Same secret as the site.                                                                                                                                                                                                          |
 
+| `IMAGES_CONTACT_EMAIL` | | `images`: contact address in the Wikimedia User-Agent. Required. |
+| `BLOB_READ_WRITE_TOKEN` | | `images`: Vercel Blob token (Storage → the project's Blob store). Not needed for dry runs. |
+| `PIXABAY_API_KEY`, `PEXELS_API_KEY` | | `images`: optional second and third sources; skipped when unset. |
+| `BFL_API_KEY`, `FLUX_MODEL` | `flux-2-pro` | `images`: generation for generic topics; skipped when unset. |
+| `PIPELINE_IMAGE_MODEL` | `PIPELINE_MODEL` | `images`: vision model that scores candidates. |
+| `IMAGES_MIN_SCORE` | `70` | `images`: lowest score that can be picked. |
+
 Locally, `.env.local` is loaded automatically. In GitHub Actions, set the secrets `ANTHROPIC_API_KEY`, `PIPELINE_SERVICE_ACCOUNT_EMAIL`, `PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY`, `PIPELINE_SHEET_ID` and `REVALIDATE_SECRET`, and optionally the repository variables `PIPELINE_BUDGET_USD`, `PIPELINE_MODEL`, `PIPELINE_CHECK_MODEL`, `PIPELINE_EUR_USD_RATE` and `SITE_URL`.
 
 Prices for the cost log are in `pipeline/lib/cost.ts`; a model missing from that table stops the run rather than spending untracked money. Sonnet-class calls use the server-side refusal fallback (`fallbacks: "default"`); batch requests can't, so a refused batch request becomes an `error` row.
@@ -166,12 +191,14 @@ pipeline/
   context.ts          config, content files, briefs, usage logging
   sheet.ts            the pipeline's Sheet access (cached reads, logged writes, rate limiting)
   claude.ts           streamed calls, pause_turn, fallbacks, batches, budget
-  commands/           init, research, draft, check, publish, refresh, run
+  commands/           init, research, draft, check, publish, refresh, run, seed, images
+  media.ts            image searches, downloads, sharp conversion, Blob uploads, Flux
   lib/                pure functions, tested with Vitest (*.test.ts)
   fixtures/dry-run-queue.json
   launch-queue.json   launch Queue rows (regions, wine areas, towns, guides, itineraries, practical pages) for `seed`
 content/
-  prompts/            research.md, draft.md, redraft.md, check.md
+  prompts/            research.md, draft.md, redraft.md, check.md, image-score.md
+  image-brief.md      what a hero image should and must not show
   templates/          guide, ranked_list, hotel_roundup, itinerary, practical, town, region, subregion
   style-guide.md, banned-phrases.txt, selection-rules.md, research-blocklist.txt
 ```

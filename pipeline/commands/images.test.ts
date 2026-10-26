@@ -2,7 +2,21 @@ import { describe, expect, it } from "vitest";
 
 import type { ImageTarget } from "../lib/images";
 import { SheetStore } from "../sheet";
-import { detach, named, shareParent } from "./images";
+import { detach, isAccountLimit, named, shareParent } from "./images";
+
+describe("isAccountLimit", () => {
+  it("recognizes a used-up spend limit or credit balance, not other errors", () => {
+    const limit = new Error(
+      '400 {"type":"error","error":{"type":"invalid_request_error","message":"You have reached your specified API usage limits. You will regain access on 2026-11-01 at 00:00 UTC."}}',
+    );
+    expect(isAccountLimit(limit)).toBe(true);
+    expect(isAccountLimit(new Error("Your credit balance is too low to access the API"))).toBe(
+      true,
+    );
+    expect(isAccountLimit(new Error("429 rate_limit_error"))).toBe(false);
+    expect(isAccountLimit(undefined)).toBe(false);
+  });
+});
 
 describe("named", () => {
   it("matches --only by slug or by Tab/slug", () => {

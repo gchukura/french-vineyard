@@ -155,9 +155,10 @@ export async function images(ctx: Context): Promise<Choice[]> {
             `${target.tab}/${target.slug}: ${pick.outcome}${what}${pick.reason ? ` (${pick.reason})` : ""}`,
           );
         } catch (error) {
-          if (error instanceof BudgetExceeded) {
+          if (error instanceof BudgetExceeded || isAccountLimit(error)) {
+            // Every later row would fail the same way, so stop instead of logging it per row.
+            if (!stopped) ctx.log(`stopping: ${(error as Error).message}`);
             stopped = true;
-            ctx.log(error.message);
             return;
           }
           const reason = (error as Error).message;
@@ -183,6 +184,12 @@ export async function images(ctx: Context): Promise<Choice[]> {
   ctx.log(`images report: ${path.relative(ROOT, outDir)}/picks.md`);
   return picks;
 }
+
+/** The Anthropic account's spend limit or credit balance is used up; no later call will succeed. */
+export const isAccountLimit = (error: unknown) =>
+  /reached your specified API usage limits|credit balance is too low/i.test(
+    (error as Error)?.message ?? "",
+  );
 
 /**
  * Whether --only names this row, by slug or as Tab/slug. Tab/slug tells

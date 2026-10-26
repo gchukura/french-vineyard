@@ -2,7 +2,35 @@ import { describe, expect, it } from "vitest";
 
 import type { ImageTarget } from "../lib/images";
 import { SheetStore } from "../sheet";
-import { detach, isAccountLimit, named, shareParent } from "./images";
+import { detach, isAccountLimit, named, reviewedPicks, shareParent, type Choice } from "./images";
+
+describe("reviewedPicks", () => {
+  const pick = (tab: ImageTarget["tab"], slug: string, outcome: Choice["outcome"]) =>
+    ({
+      target: { tab, slug, name: slug, path: `/${slug}/`, parents: [] },
+      outcome,
+      candidates: 8,
+      ...(outcome === "picked" ? { chosen: { sourceUrl: `https://src/${slug}` } } : {}),
+    }) as Choice;
+  const picks = [
+    pick("SubRegions", "chablis", "picked"),
+    pick("Towns", "chablis", "picked"),
+    pick("Articles", "a", "picked"),
+    pick("Articles", "b", "parent"),
+  ];
+
+  it("keeps only the named picks, telling apart rows that share a slug", () => {
+    expect([...reviewedPicks(picks, ["SubRegions/chablis", "Articles/a"]).keys()]).toEqual([
+      "SubRegions/chablis",
+      "Articles/a",
+    ]);
+  });
+
+  it("refuses a name with no reviewed pick, including pages that kept sharing", () => {
+    expect(() => reviewedPicks(picks, ["Articles/a", "Articles/b"])).toThrow(/Articles\/b/);
+    expect(() => reviewedPicks(picks, ["Articles/typo"])).toThrow(/typo/);
+  });
+});
 
 describe("isAccountLimit", () => {
   it("recognizes a used-up spend limit or credit balance, not other errors", () => {

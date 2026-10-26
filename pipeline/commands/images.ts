@@ -63,7 +63,7 @@ const SEARCHES = [
 
 type Ranked = Scored & { provider: string; title: string; sourceUrl: string; pass: string };
 
-type Choice = {
+export type Choice = {
   target: ImageTarget;
   /** picked: a photo of its own; parent: shares a parent page's hero; none: neither. */
   outcome: "picked" | "parent" | "none" | "error";
@@ -106,11 +106,17 @@ export async function images(ctx: Context): Promise<Choice[]> {
 
   const { targets, used } = await collect(ctx);
   for (const url of rejects) used.add(url);
-  const todo = targets
-    .filter((t) => !ctx.args.only || named(ctx.args.only, t))
-    .slice(0, ctx.args.max);
+  // --from: the reviewed picks of a dry run, for the pages named with --only.
+  const reviewed = ctx.args.from
+    ? reviewedPicks(JSON.parse(await readFile(ctx.args.from, "utf8")), ctx.args.only)
+    : undefined;
+  const todo = reviewed
+    ? [...reviewed.values()].map((p) => p.target)
+    : targets.filter((t) => !ctx.args.only || named(ctx.args.only, t)).slice(0, ctx.args.max);
   ctx.log(
-    `images: ${targets.length} published row(s) without a hero image${ctx.args.redo ? " or named for --redo" : ""}; doing ${todo.length}`,
+    reviewed
+      ? `images: applying ${todo.length} reviewed pick(s) from ${ctx.args.from}`
+      : `images: ${targets.length} published row(s) without a hero image${ctx.args.redo ? " or named for --redo" : ""}; doing ${todo.length}`,
   );
 
   const outDir = path.join(
@@ -144,7 +150,9 @@ export async function images(ctx: Context): Promise<Choice[]> {
       async (target) => {
         if (stopped) return;
         try {
-          const pick = await imageFor(ctx, target, o);
+          const pick = reviewed
+            ? await applyReviewed(ctx, reviewed.get(`${target.tab}/${target.slug}`)!, o)
+            : await imageFor(ctx, target, o);
           picks.push(pick);
           const what = pick.chosen
             ? ` ${pick.pass} ${pick.chosen.provider} ${pick.chosen.score} "${pick.chosen.title}"`
@@ -183,6 +191,32 @@ export async function images(ctx: Context): Promise<Choice[]> {
   );
   ctx.log(`images report: ${path.relative(ROOT, outDir)}/picks.md`);
   return picks;
+}
+
+/**
+ * The picked rows of a dry run's picks.json that --only names, keyed by
+ * Tab/slug. Every name must match a pick, so a typo can't silently skip an
+ * approved page.
+ */
+export function reviewedPicks(picks: Choice[], only: string[] = []): Map<string, Choice> {
+  const chosen = picks.filter((p) => p.outcome === "picked" && p.chosen && named(only, p.target));
+  const missing = only.filter((o) => !chosen.some((p) => named([o], p.target)));
+  if (missing.length) throw new Error(`No reviewed pick for: ${missing.join(", ")}`);
+  return new Map(chosen.map((p) => [`${p.target.tab}/${p.target.slug}`, p]));
+}
+
+/** Stores a reviewed pick as it was approved: same photo, credit and alt, no new search or score. */
+async function applyReviewed(ctx: Context, pick: Choice, o: Options): Promise<Choice> {
+  const { target, chosen } = pick;
+  const row = (await ctx.store.rows(target.tab)).find((r) => r.slug === target.slug);
+  if (row?.status?.trim().toLowerCase() !== "published")
+    throw new Error(`${target.tab}/${target.slug} is not a published row`);
+  if (o.used.has(chosen!.sourceUrl))
+    throw new Error(`${chosen!.sourceUrl} is already used on the site`);
+  o.used.add(chosen!.sourceUrl);
+  const buffer = await fetchBuffer(chosen!.downloadUrl);
+  const stored = await store(ctx, target, chosen!, buffer, await previewJpeg(buffer), o);
+  return { ...pick, ...stored };
 }
 
 /** The Anthropic account's spend limit or credit balance is used up; no later call will succeed. */

@@ -224,5 +224,10 @@ describe("parseArgs", () => {
     });
     expect(() => parseArgs(["images", "--redo"])).toThrow(/--only/);
     expect(() => parseArgs(["run", "--redo", "--only", "a"])).toThrow(/images/);
+    expect(parseArgs(["images", "--from", "p.json", "--only", "Towns/a"])).toMatchObject({
+      from: "p.json",
+      only: ["Towns/a"],
+    });
+    expect(() => parseArgs(["images", "--from", "p.json"])).toThrow(/--only/);
   });
 });

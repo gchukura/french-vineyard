@@ -80,7 +80,7 @@ The model then grades the same rules plus unsourced claims and style. A draft pa
 
 `images [n]` gives up to n published Regions, SubRegions, Towns and Articles rows with an empty `hero_image` a hero photo, a tab at a time in that order, so parents are done before their children. It doesn't touch the Queue. **It never generates images**, and every row and Images line it writes has `hero_is_ai` / `is_ai` set to `FALSE`.
 
-1. **Search**, filling up to 8 candidates in this order, first with the specific queries from `searchQueries` (place name + "vineyards", "vignoble"/"vignes"; for articles the title's subject, then the region):
+1. **Search** each source separately, first with the specific queries from `searchQueries` (place name + "vineyards", "vignoble"/"vignes"; for articles the title's subject, then the region), and score 8 candidates: up to 3 stock photos (Pixabay, then Pexels) always get a place, Commons fills the rest and comes first, and either side fills places the other leaves empty (`mixCandidates`):
    - **Wikimedia Commons** API with a descriptive User-Agent carrying `IMAGES_CONTACT_EMAIL`. Kept only when the licence is CC0, CC BY, CC BY-SA or public domain, the file is JPEG/PNG/WebP/TIFF, landscape (width/height ≥ 1.25), at least 1600 px wide, under 50 MB, and not personality-restricted.
    - **Pixabay** (`PIXABAY_API_KEY`), responses cached 24 hours in `pipeline/.cache/pixabay/`, files downloaded, never hotlinked. Standard keys only get 1280 px files, below the 1600 px floor, so Pixabay contributes only with full API access (`fullHDURL`/`imageURL`).
    - **Pexels** (`PEXELS_API_KEY`), with photographer, photographer URL and photo URL kept as attribution.
@@ -89,9 +89,22 @@ The model then grades the same rules plus unsourced claims and style. A draft pa
    If nothing wins, a **broad pass** searches and scores again with `broadQueries`: the wine area (of the page or its town), the region and the département (`DEPARTMENTS` in `pipeline/lib/images.ts`), each with "vignoble" or "vineyards".
 3. **Store**: the original is downloaded and converted with sharp to AVIF and WebP at 640, 1024, 1600 and 2400 px (never upscaled, so a 1920 px source stops at 1600). EXIF, ICC and XMP are kept; WebP and AVIF can't carry an IPTC-IIM block, so when the source has no XMP a packet with IPTC Core creator, credit, rights and source is added. Files go to Vercel Blob at `images/<tab>/<slug>-<hash>-<width>.<ext>`.
 4. **Write**: the row gets `hero_image` (the largest WebP; next/image resizes it to the site's widths), `hero_credit`, `hero_license`, `hero_source_url` and `hero_is_ai=FALSE`; the Images tab gets `url`, `alt`, `credit`, `license`, `source_url`, `is_ai`, `used_on` (the page path). Missing `hero_source_url` and Images columns are added. One revalidate call follows.
-5. **Share a parent's hero**: a row still without a pick after both passes takes the hero of its nearest published parent page that has one: for an article its town, then the town's wine area, then the region; for a town its wine area, then its region; for a wine area its region. The hero columns are copied, and the page's path is added to that image's Images `used_on` (a comma-separated list), so `/image-credits/` shows every page an image is on. A row with no parent hero is left without one and listed as `none`. To give such a page its own photo later, clear its `hero_image` and run `images` again.
+5. **Share a parent's hero**: a row still without a pick after both passes takes the hero of its nearest published parent page that has one: for an article its town, then the town's wine area, then the region; for a town its wine area, then its region; for a wine area its region. The hero columns are copied, and the page's path is added to that image's Images `used_on` (a comma-separated list), so `/image-credits/` shows every page an image is on. A row with no parent hero is left without one and listed as `none`.
 
 To turn a photo down for good, add its source page URL to `content/image-rejects.txt`, clear `hero_image` on the rows that use it and run `images` again.
+
+### Reviewing before writing
+
+Pages that already have a hero (for example ones sharing a parent's) are skipped unless named. To try again for some of them and review the result before anything is written:
+
+```sh
+# 1. Search and score again, write nothing; the report and previews land in pipeline/.dry-run/images-<time>/
+npm run pipeline -- images --dry-run --redo --only Towns/troyes,Articles/burgundy-with-kids
+# 2. Apply only the picks you approve, exactly as reviewed: no new search or scoring, no API cost
+npm run pipeline -- images --from pipeline/.dry-run/images-<time>/picks.json --only Towns/troyes
+```
+
+`--only` takes slugs or `Tab/slug`; use `Tab/slug` where a slug exists in two tabs (the Chablis wine area and town). `--redo` and `--from` both need `--only`, and `--from` refuses a name with no pick in that file. Re-scoring can pick differently from one run to the next, which is why approved picks are applied with `--from` and not by running `--redo` for real. When a page moves to a new photo, its path is taken off the old photo's Images `used_on`. A run stops at the first Anthropic account-limit error (spend limit or credit balance).
 
 Every run writes `picks.md` and `picks.json` (all candidates, scores, notes, the pick, credit and alt) with each pick's preview under `pipeline/.images/images-<time>/`, or `pipeline/.dry-run/images-<time>/` for a dry run, where the AVIF and WebP files are saved instead of uploaded. The site shows the credit with `components/ImageCredit.tsx` under every hero, and `/image-credits/` lists every Images row.
 

@@ -24,6 +24,8 @@ export const PIPELINE_TABS: Record<string, string[]> = {
   Queue: QUEUE_HEADERS,
   Facts: FACTS_HEADERS,
   Queries: QUERIES_HEADERS,
+  // The owner pastes tour URLs here; tours:import reads them.
+  Tours_Inbox: ["url", "added_at", "processed", "note"],
 };
 
 /** Google Sheets rejects cells over 50,000 characters. */
@@ -120,7 +122,9 @@ export class SheetStore {
   }
 
   async hasTab(tab: string): Promise<boolean> {
-    return Boolean((await this.getDoc()).sheetsByTitle[tab]) || Boolean(this.tabs.get(tab)?.exists);
+    // A tab already loaded answers without another call to Google.
+    if (this.tabs.get(tab)?.exists) return true;
+    return Boolean((await this.getDoc()).sheetsByTitle[tab]);
   }
 
   /** Raw rows as strings keyed by header. */

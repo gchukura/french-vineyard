@@ -5,6 +5,7 @@ import path from "node:path";
 import { check } from "./commands/check";
 import { draft } from "./commands/draft";
 import { images } from "./commands/images";
+import { toursCheck, toursDescribe, toursImport, toursQueue } from "./commands/tours";
 import { init } from "./commands/init";
 import { publish } from "./commands/publish";
 import { refresh } from "./commands/refresh";
@@ -62,6 +63,18 @@ async function main() {
         break;
       case "images":
         await images(ctx);
+        break;
+      case "tours:import":
+        await toursImport(ctx);
+        break;
+      case "tours:check":
+        await toursCheck(ctx);
+        break;
+      case "tours:describe":
+        await toursDescribe(ctx);
+        break;
+      case "tours:queue":
+        await toursQueue(ctx);
         break;
     }
   } finally {

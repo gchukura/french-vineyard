@@ -65,26 +65,26 @@ export function bannedPhraseHits(
 
 // Letters on either side, accented ones included, mean it's part of a word
 // ("crème", "même" and "Rome" are not "me").
-const FIRST_PERSON =
+export const FIRST_PERSON =
   /(?<![\p{L}\p{N}'’])(I|I['’]m|I['’]ve|I['’]d|[Mm]y|me|mine)(?![\p{L}\p{N}'’])/u;
 // Case-sensitive "us" so "US$" and "US" don't count.
-const FIRST_PERSON_PLURAL =
+export const FIRST_PERSON_PLURAL =
   /(?<![\p{L}\p{N}'’])([Ww]e|[Ww]e['’]re|[Ww]e['’]ve|[Oo]urs?|us)(?![\p{L}\p{N}'’])/u;
 
-const SELLING = [
+export const SELLING = [
   /\b(buy|order|purchase|shop for|stock up on|pick up)\s+(a |some |the |your |a few |extra )?(bottles?|cases?|wines?|champagnes?|crémants?|magnums?)\b/i,
   /\bship(ping|ped)?\s+(it |them |bottles |wine |cases )?home\b/i,
   /\b(free shipping|discount code|promo code|use code|% off)\b/i,
 ];
 
 /** "€25", "€12.50", "€20–35", "€15 to €65"; ranges count as one amount. */
-const EUR_AMOUNT = /€\s?\d[\d,.]*(?:\s?(?:[–-]|to)\s?€?\d[\d,.]*)?/g;
+export const EUR_AMOUNT = /€\s?\d[\d,.]*(?:\s?(?:[–-]|to)\s?€?\d[\d,.]*)?/g;
 
 /**
  * Talk about how the page was made: fact sheets, sources, research, and facts
  * that were "not found" or "unconfirmed". Readers should never see it.
  */
-const META_LANGUAGE = [
+export const META_LANGUAGE = [
   /\bfact[- ]sheets?\b/i,
   /\bthe brief\b/i,
   /\b(?:un)?sourced\b/i,
@@ -146,12 +146,12 @@ const TRIVIA = [
 ];
 
 /** "9:00", "14:30" without a.m./p.m., and French-style "14h30" (10h and up, so "1h30" durations pass). */
-const TWENTY_FOUR_HOUR = [
+export const TWENTY_FOUR_HOUR = [
   /\b(?:[01]?\d|2[0-3]):[0-5]\d\b(?!\s?[ap]\.?\s?m\b)/gi,
   /\b(?:1\d|2[0-3])h(?:[0-5]\d)?\b/g,
 ];
 
-const RAW_AFFILIATE = /https?:\/\/(www\.)?(getyourguide|viator|booking|expedia|winalist)\.[a-z.]+/i;
+export const RAW_AFFILIATE = /https?:\/\/(www\.)?(getyourguide|viator|booking|expedia|winalist)\.[a-z.]+/i;
 
 export type CheckInput = {
   draft: Draft;

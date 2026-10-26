@@ -1,6 +1,6 @@
 # Content pipeline
 
-A Node CLI (run with tsx) that researches, drafts, checks and publishes pages into the content Sheet. `.github/workflows/pipeline.yml` runs it weekly (Sundays, 02:00 UTC) for refreshes only: `refresh` re-researches published rows past `refresh_after`, and `publish` puts the refreshed pages that pass check live. New Queue rows are run locally (or by hand) with `run`.
+A Node CLI (run with tsx) that researches, drafts, checks and publishes pages into the content Sheet. `.github/workflows/pipeline.yml` runs it weekly (Sundays, 02:00 UTC): `tours:check` and `tours:describe` for the owner's tours (see Tours below), then `refresh`, which re-researches published rows past `refresh_after`, and `publish`, which puts the refreshed pages that pass check live. New Queue rows are run locally (or by hand) with `run`.
 
 ```sh
 npm run pipeline -- init                 # create the Queue, Facts and Queries tabs
@@ -13,6 +13,10 @@ npm run pipeline -- run --max 30         # research, draft, check, publish under
 npm run pipeline -- seed --file pipeline/launch-queue.json   # append Queue rows (skips existing ids)
 npm run pipeline -- images 20            # hero images for published rows with no hero_image
 npm run pipeline -- images 5 --dry-run   # same, but files land in pipeline/.dry-run/images-<time>/
+npm run tours:import                     # Tours_Inbox URLs -> draft Tours rows (also: npm run pipeline -- tours:import)
+npm run tours:check                      # follow every published tour's /go/ link
+npm run tours:describe                   # best_for / why_picked for published tours missing them
+npm run tours:queue                      # ranked_list Queue rows for region + category with 3+ tours
 
 # Read the Sheet, call the API, write nothing. Drafts land in pipeline/.dry-run/<time>/.
 npm run pipeline -- run --max 3 --dry-run --queue-file pipeline/fixtures/dry-run-queue.json
@@ -108,6 +112,21 @@ npm run pipeline -- images --from pipeline/.dry-run/images-<time>/picks.json --o
 
 Every run writes `picks.md` and `picks.json` (all candidates, scores, notes, the pick, credit and alt) with each pick's preview under `pipeline/.images/images-<time>/`, or `pipeline/.dry-run/images-<time>/` for a dry run, where the AVIF and WebP files are saved instead of uploaded. The site shows the credit with `components/ImageCredit.tsx` under every hero, and `/image-credits/` lists every Images row.
 
+## Tours
+
+The owner curates every tour by hand in the Tours tab: which tours, their rank, badge, title, price, rating and status. The code never selects, adds or reorders a tour. These commands do the clerical work around that list.
+
+**Sheet rules.** `docs/apps-script-tours.js` (`installToursRules`, run from Extensions → Apps Script) adds dropdowns for `provider`, `region_slug` (from Regions), `category`, `badge` and `status`; limits `rank` to a whole number unique within region + category (archived rows aside) and `why_picked` to 300 characters; and colors a published row red when a field the site needs is empty, amber when `link_flag` or `notes_flag` is set. The category and badge lists are at the top of the script.
+
+| Command          | Reads                                                         | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ---------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tours:import`   | Tours_Inbox rows not marked `processed`                       | Parses the provider and product id from each pasted URL (`parseTourUrl` in `pipeline/lib/tours.ts`; GetYourGuide `…-t220971/`, Viator `/tours/…/d479-35428P1`, Winalist `/experiences/688/…` or `/hosts/303/…`), appends a Tours row with `id` (`gyg-220971`), `provider`, `provider_id`, `provider_url` (query string dropped) and `status=draft`, and marks the inbox row processed. The tour page is never fetched. A listing or search URL stays unprocessed with the reason in `note`; a tour already in Tours is marked processed with a note. Creates Tours_Inbox if it's missing.                                                                                                                                                                      |
+| `tours:check`    | Published Tours rows                                          | Follows each tour's `/go/` link on `SITE_URL` (marked so it isn't logged as a click), then the provider's redirects. On the product page: `last_checked` = today and `link_flag` cleared. A 404, a server error, or a final URL that is a search, location or listing page: a dated `link_flag`. GetYourGuide and Viator answer automated requests with 403 whatever the page, so a 403/429/503 on a product URL counts as unverified and changes nothing. With `GYG_API_KEY`, GetYourGuide tours are read from the Partner API (`GET /1/tours/{id}`, EUR) instead: `price_from_eur`, `rating`, `review_count` and `last_checked`. Runs weekly.                                                                                                                |
+| `tours:describe` | Published Tours rows with an empty `best_for` or `why_picked` | One Sonnet-class call per tour with up to 3 web searches (the research blocklist applies, so booking platforms are excluded), `content/prompts/tour-notes.md`, the style guide and `content/selection-rules.md`, given the tour's title, highlights, duration, price, rating, review count, category, region and town. `checkTourNotes` then requires `best_for` ≤ 60 characters, `why_picked` of 2–3 sentences and ≤ 300 characters, no first person, every number from the tour's data or a quoted source search actually returned, and the page rules (banned phrases, no selling, no meta-language, American English, € with $). Pass: only the empty fields are filled. Fail: nothing written, the reason in `notes_flag`. Runs weekly, before `refresh`. |
+| `tours:queue`    | Tours, Articles, Queue                                        | For each region + category with at least 3 published tours and no ranked list (no Articles row with the slug, no ranked_list Queue row for that region and category), appends a Queue row: `q-best-champagne-cellar-tours`, `target=articles`, `page_type=ranked_list`, the category, a target keyword and `stage=queued`. `run` drafts it with the owner's tours in rank order.                                                                                                                                                                                                                                                                                                                                                                               |
+
+`tours:check` and `tours:describe` add the `link_flag` and `notes_flag` columns to Tours when they're missing; `tours:import` adds `note` to Tours_Inbox. The pipeline reads only published Tours rows for briefs and checks, so imported drafts with no title yet don't break a run.
+
 ## Tabs
 
 The pipeline writes to Queue, Facts, Articles and Towns, and reads Regions, Tours and Hotels. `init` creates Queue, Facts and Queries with these headers, and adds any missing columns to existing tabs.
@@ -193,6 +212,7 @@ Place pages (towns, regions, sub-regions) render their own tours, hotels, estate
 | `PIXABAY_API_KEY`, `PEXELS_API_KEY` | | `images`: optional second and third sources; skipped when unset. |
 | `PIPELINE_IMAGE_MODEL` | `PIPELINE_MODEL` | `images`: vision model that scores candidates. |
 | `IMAGES_MIN_SCORE` | `70` | `images`: lowest score that can be picked. |
+| `GYG_API_KEY` | | `tours:check`: GetYourGuide Partner API token (`X-ACCESS-TOKEN`). When set, GetYourGuide tours are refreshed from the API instead of by following their links. Optional; set it as a repository secret for the weekly run. |
 
 Locally, `.env.local` is loaded automatically. In GitHub Actions, set the secrets `ANTHROPIC_API_KEY`, `PIPELINE_SERVICE_ACCOUNT_EMAIL`, `PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY`, `PIPELINE_SHEET_ID` and `REVALIDATE_SECRET`, and optionally the repository variables `PIPELINE_BUDGET_USD`, `PIPELINE_MODEL`, `PIPELINE_CHECK_MODEL`, `PIPELINE_EUR_USD_RATE` and `SITE_URL`.
 

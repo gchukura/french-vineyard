@@ -5,9 +5,13 @@ This file is the source for the "How we ranked these" box on ranked-list pages. 
 ## What a tour needs to be considered
 
 - It visits working wine estates or cellars in the region, not just a city walk with a tasting at the end.
-- It is bookable online in English, with a clear price and cancellation policy.
-- It has a public rating of at least 4.5 from at least 50 reviews, or it is new and the editor has checked it directly with the operator.
-- Groups are small enough to talk to the winemaker or guide (the listing states a group size), or the tour is private.
+- **Rating:** at least 4.5 from at least 50 reviews. Day trips from Paris need at least 100 reviews.
+- **Free cancellation** is offered.
+- **An English-speaking guide** leads the tour.
+- **The group size is stated.** Groups under 16 are preferred, and private tours count as small.
+- **A clear meeting point or a pickup** is given.
+- **One option per price tier in each category of a region:** under €60, €60 to €150, and over €150. Each region's category lists at most one tour per tier, so readers see a real choice of budgets, not three versions of the same day.
+- **The same tour on two sites:** when GetYourGuide and Viator sell the same tour, the listing with more reviews is the one shown.
 
 ## How the order is set
 

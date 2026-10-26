@@ -14,7 +14,11 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "pipeline": "tsx pipeline/cli.ts"
+    "pipeline": "tsx pipeline/cli.ts",
+    "tours:import": "tsx pipeline/cli.ts tours:import",
+    "tours:check": "tsx pipeline/cli.ts tours:check",
+    "tours:describe": "tsx pipeline/cli.ts tours:describe",
+    "tours:queue": "tsx pipeline/cli.ts tours:queue"
   },
   "dependencies": {
     "google-auth-library": "^11.3.1",

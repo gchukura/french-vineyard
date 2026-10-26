@@ -44,6 +44,8 @@ export default async function Home() {
   const d = await getSiteData();
   const heroSrc =
     configText(d.config, "home_hero_image") ?? d.regions.find((r) => r.hero_image)?.hero_image;
+  // The Images tab carries every photo's credit; the hero shows it like every other page does.
+  const heroCredit = heroSrc ? d.images.find((i) => i.url === heroSrc) : undefined;
   const stats = configJson(d.config, "home_stats_json", statsSchema, []);
   const faq = configJson(d.config, "home_faq_json", faqSchema, []);
   const featured = d.tours.filter((t) => t.featured).slice(0, 8);
@@ -55,7 +57,13 @@ export default async function Home() {
   return (
     <main id="main">
       <Hero
-        image={{ src: heroSrc ?? DEFAULT_OG_IMAGE, alt: altFor(d, heroSrc) }}
+        image={{
+          src: heroSrc ?? DEFAULT_OG_IMAGE,
+          alt: altFor(d, heroSrc),
+          credit: heroCredit?.credit,
+          license: heroCredit?.license,
+          sourceUrl: heroCredit?.source_url,
+        }}
         eyebrow="An independent travel guide"
         title={configText(d.config, "home_h1") ?? "The wine regions of France, planned properly"}
         standfirst={

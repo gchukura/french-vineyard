@@ -67,7 +67,7 @@ export function loadConfig(args: Args): Config {
 }
 
 /** Rough per-call ceilings used to stop before the budget is crossed. */
-export const ESTIMATE_USD = { research: 0.35, draft: 0.25, check: 0.08 };
+export const ESTIMATE_USD = { research: 0.35, draft: 0.25, check: 0.08 }; // check is per pass; two run per draft
 
 export async function loadContentFiles(): Promise<ContentFiles> {
   const read = (p: string) => readFile(path.join(CONTENT, p), "utf8");

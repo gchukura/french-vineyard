@@ -63,9 +63,13 @@ export function bannedPhraseHits(
   });
 }
 
-const FIRST_PERSON = /(?<![\w'’])(I|I['’]m|I['’]ve|I['’]d|[Mm]y|me|mine)(?![\w'’])/;
+// Letters on either side, accented ones included, mean it's part of a word
+// ("crème", "même" and "Rome" are not "me").
+const FIRST_PERSON =
+  /(?<![\p{L}\p{N}'’])(I|I['’]m|I['’]ve|I['’]d|[Mm]y|me|mine)(?![\p{L}\p{N}'’])/u;
 // Case-sensitive "us" so "US$" and "US" don't count.
-const FIRST_PERSON_PLURAL = /\b([Ww]e|[Ww]e['’]re|[Ww]e['’]ve|[Oo]urs?|us)\b/;
+const FIRST_PERSON_PLURAL =
+  /(?<![\p{L}\p{N}'’])([Ww]e|[Ww]e['’]re|[Ww]e['’]ve|[Oo]urs?|us)(?![\p{L}\p{N}'’])/u;
 
 const SELLING = [
   /\b(buy|order|purchase|shop for|stock up on|pick up)\s+(a |some |the |your |a few |extra )?(bottles?|cases?|wines?|champagnes?|crémants?|magnums?)\b/i,
@@ -375,4 +379,60 @@ export function isWithdrawn(f: Finding): boolean {
   return /\b(?:no (?:change|fix|edit)s? (?:is |are )?needed|nothing to (?:change|fix)|(?:this )?finding is withdrawn|withdraw(?:n)? this|dismiss this(?: one)?|this (?:is acceptable|passes|is sourced)|is correct, so no|so no change(?: here)?|not a (?:number|trivia|style) problem)\b/i.test(
     f.fix,
   );
+}
+
+const words = (s: string) =>
+  new Set(
+    s
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+      .split(/\s+/)
+      .filter(Boolean),
+  );
+
+/** Whether two quotes point at the same text: one contains the other, or most words are shared. */
+export function quotesOverlap(a: string, b: string): boolean {
+  const x = a.toLowerCase().trim();
+  const y = b.toLowerCase().trim();
+  if (!x || !y) return false;
+  if (x.includes(y) || y.includes(x)) return true;
+  const wa = words(a);
+  const wb = words(b);
+  const shared = [...wa].filter((w) => wb.has(w)).length;
+  return shared / Math.min(wa.size, wb.size) >= 0.6;
+}
+
+/**
+ * Model findings from two independent check passes. A finding is agreed when
+ * both passes report the same rule with overlapping quotes; only agreed errors
+ * block a draft. The rest are kept as warnings so the writer still sees them.
+ */
+export function agreedFindings(
+  a: Finding[],
+  b: Finding[],
+): { agreed: Finding[]; single: Finding[] } {
+  const agreed: Finding[] = [];
+  const single: Finding[] = [];
+  const usedB = new Set<number>();
+  for (const f of a) {
+    const j = b.findIndex(
+      (g, i) => !usedB.has(i) && g.rule === f.rule && quotesOverlap(f.quote, g.quote),
+    );
+    if (j >= 0) {
+      usedB.add(j);
+      agreed.push(f);
+    } else single.push(f);
+  }
+  b.forEach((g, i) => {
+    if (!usedB.has(i)) single.push(g);
+  });
+  return {
+    agreed,
+    single: single.map((f) => ({
+      ...f,
+      severity: "warning" as const,
+      fix: `(Flagged by one of two checks.) ${f.fix}`,
+    })),
+  };
 }

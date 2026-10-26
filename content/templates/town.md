@@ -21,4 +21,4 @@ The `standfirst` you return becomes the town's intro paragraph, shown above the 
 
 ## Length
 
-450–1,200 words in the body. A small village with few sourced facts should be short, not padded.
+Aim for 550–700 words in the body; 450 is the minimum and 1,200 the maximum. Reach the length with sourced facts (estates, visit terms, fees, hours, transport), never with filler or inferences.

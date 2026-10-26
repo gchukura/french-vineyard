@@ -3,7 +3,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { textOf } from "../claude";
 import type { Context } from "../context";
 import { ESTIMATE_USD } from "../context";
-import { isWithdrawn, runChecks, type Draft, type Finding } from "../lib/checks";
+import { agreedFindings, isWithdrawn, runChecks, type Draft, type Finding } from "../lib/checks";
 import { BudgetExceeded } from "../lib/cost";
 import { allowedNumbers } from "../lib/numbers";
 import { pool } from "../lib/pool";
@@ -50,40 +50,44 @@ export async function gradeDraft(ctx: Context, row: QueueRow, draft: Draft): Pro
     hotelIds: new Set(hotels.map((h) => h.id)),
   });
 
-  const result = await ctx.claude.call(
-    {
-      model: ctx.config.checkModel,
-      max_tokens: 8_000,
-      system: [checkSystem(ctx.files)],
-      output_config: { effort: "medium", format: zodOutputFormat(gradeSchema) },
-      messages: [
-        {
-          role: "user",
-          content: checkUserText(
-            brief,
-            template,
-            ctx.files,
-            draft,
-            automated.findings,
-            automated.wordCount,
-          ),
-        },
-      ],
-    },
-    ESTIMATE_USD.check,
-  );
-  await ctx.recordUsage(row, "check", result);
-  const grade = gradeSchema.parse(JSON.parse(textOf(result.message.content)));
+  // Two independent passes; only errors both agree on block the draft.
+  const params = {
+    model: ctx.config.checkModel,
+    max_tokens: 8_000,
+    system: [checkSystem(ctx.files)],
+    output_config: { effort: "medium" as const, format: zodOutputFormat(gradeSchema) },
+    messages: [
+      {
+        role: "user" as const,
+        content: checkUserText(
+          brief,
+          template,
+          ctx.files,
+          draft,
+          automated.findings,
+          automated.wordCount,
+        ),
+      },
+    ],
+  };
+  const results = await Promise.all([
+    ctx.claude.call(params, ESTIMATE_USD.check),
+    ctx.claude.call(params, ESTIMATE_USD.check),
+  ]);
+  for (const r of results) await ctx.recordUsage(row, "check", r);
+  const grades = results.map((r) => gradeSchema.parse(JSON.parse(textOf(r.message.content))));
 
   // The model sometimes lists a finding and withdraws it in its own fix text
   // ("no change is needed"); those aren't problems, so they don't count.
   // Rules the deterministic checks measure exactly are theirs alone.
-  const modelFindings = grade.findings.filter(
-    (f) => !isWithdrawn(f) && !AUTOMATED_RULES.has(f.rule),
-  );
+  const usable = (g: (typeof grades)[number]) =>
+    g.findings.filter((f) => !isWithdrawn(f) && !AUTOMATED_RULES.has(f.rule));
+  const { agreed, single } = agreedFindings(usable(grades[0]), usable(grades[1]));
+  const modelFindings = [...agreed, ...single];
   const errors = automated.findings.filter((f) => f.severity === "error").length;
-  const modelErrors = modelFindings.filter((f) => f.severity === "error").length;
-  const score = Math.max(0, Math.min(100, Math.round(grade.score) - 10 * errors));
+  const modelErrors = agreed.filter((f) => f.severity === "error").length;
+  const modelScore = (grades[0].score + grades[1].score) / 2;
+  const score = Math.max(0, Math.min(100, Math.round(modelScore) - 10 * errors));
   // Pass is decided by the error findings themselves, not the model's own verdict.
   const passed = errors === 0 && modelErrors === 0;
   return {

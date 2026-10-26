@@ -37,7 +37,7 @@ Readers are English-speaking travelers planning a few days in a French wine regi
 
 ## Spelling, punctuation and names
 
-- **American English spelling:** "color," "traveler," "center," "theater," "organize," "program."
+- **American English spelling and words:** "color," "traveler," "center," "meter," "theater," "organize," "program"; "rental car" (not "hire car"), "parking lot" (not "car park"), "highway" (not "motorway"), "gas" (not "petrol"), "public holiday" (not "bank holiday"), "line" (not "queue"), "downtown" or "town center" (not "town centre").
 - **American punctuation:** double quotation marks, with periods and commas inside them. Use the serial (Oxford) comma. Use an en dash for ranges (€20–35, May–September) and an em dash without spaces for asides.
 - **French names keep their accents:** Épernay, Aÿ, Saint-Émilion, Mâcon, Châlons-en-Champagne. Italicize nothing; French words in common use ("cuvée," "grand cru," "caveau") need no explanation beyond a few words the first time.
 - **Capitalize** appellations and named places (Côte de Nuits, Grand Cru), not grape varieties (pinot noir, chardonnay).
@@ -47,6 +47,10 @@ Readers are English-speaking travelers planning a few days in a French wine regi
 - Internal links use trailing slashes: `/towns/epernay/`.
 - Never paste a raw booking, tour or hotel URL. Commercial tours and hotels appear only through `<TourCards ids="…" />` and `<HotelCards ids="…" />` with ids you are given. Official, non-commercial visits (tourist office tours, the Cité du Vin, an estate's own tastings) can be named in prose.
 - Use `<Callout title="…">` for at most one practical tip per article.
+
+## State facts, not inferences
+
+Each sentence is a fact or a direct instruction. Don't stack a conclusion on a fact ("the station is 1.5 km away, so you can walk everywhere"); give the fact and let the reader decide. Don't announce counts ("three things catch visitors out"); list the things. Don't repeat in "Before you go" what the page has already said.
 
 ## Write as a guide, not a researcher
 

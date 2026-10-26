@@ -1,6 +1,6 @@
 ---
 target: towns
-words: 600-1200
+words: 450-1200
 required_headings: Why visit | Visiting the estates | When to go | Before you go
 required_components: PracticalTable
 schema_type: TouristDestination
@@ -17,8 +17,8 @@ The `standfirst` you return becomes the town's intro paragraph, shown above the 
 1. **## Why visit.** What the town is known for in wine terms, using `other_facts` (appellation, UNESCO status, houses) and two or three short paragraphs.
 2. **## Visiting the estates.** How visits work here, with up to six named estates from the fact sheet and their visit type and fee. Put them in the page's one `<PracticalTable>`: `Estate|Visits|Tasting from`, fees as "€30 ($32)" or "—" if unknown.
 3. **## When to go.** From `opening_months`; what's open when, and what closes.
-4. **## Before you go.** The three warnings from the fact sheet as a short list, then one sentence on getting around town from `nearest_station`.
+4. **## Before you go.** The warnings from the fact sheet as a short list, leaving out anything the page has already said, then one sentence on getting around town from `nearest_station`.
 
 ## Length
 
-600–1,200 words in the body.
+450–1,200 words in the body. A small village with few sourced facts should be short, not padded.

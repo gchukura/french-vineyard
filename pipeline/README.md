@@ -68,7 +68,8 @@ Deterministic (`pipeline/lib/checks.ts`), each failure an error:
 - at most two "ask the estate / check with the tourist office" lines on the page, FAQ included (table cells don't count);
 - no administrative or road trivia (population, postcodes, cantons, "RN 3");
 - no 24-hour clock times ("9:00", "14:30", "14h30"); write "9 a.m.", "2:30 p.m.";
-- every euro amount followed by its USD conversion, "€25 ($27)".
+- every euro amount followed by its USD conversion, "€25 ($27)";
+- American English words and spellings ("rental car" not "hire car", "center" not "centre", "meter" not "metre"); FAQ questions may use "I" ("Do I need to book?"), nothing else may.
 
 The model then grades the same rules plus unsourced claims and style. A draft passes when there are no deterministic errors, the model passes it, and the score (the model's score minus 10 per deterministic error) is at least `PIPELINE_PASS_SCORE` (default 80).
 

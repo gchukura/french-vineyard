@@ -109,6 +109,29 @@ const CHECK_LINE =
 /** Most "ask the estate / check with the tourist office" lines a page may carry. */
 export const MAX_CHECK_LINES = 2;
 
+/** British words and spellings, with the American term to use instead. */
+export const BRITISH_TERMS: [RegExp, string][] = [
+  [/\bhire cars?\b/i, "rental car"],
+  [/\bcar hire\b/i, "car rental"],
+  [/\bcar parks?\b/i, "parking lot"],
+  [/\bmotorways?\b/i, "highway"],
+  [/\bpetrol\b/i, "gas"],
+  [/\bqueues?\b/i, "line"],
+  [/\bbank holidays?\b/i, "public holiday"],
+  // Lowercase only, so proper names ("Centre Pompidou") pass.
+  [/\bcentres?\b/, "center"],
+  [/\b(?:kilo)?metres?\b/i, "meter"],
+  [/\bcolours?\b/i, "color"],
+  [/\bflavours?\b/i, "flavor"],
+  [/\bfavourites?\b/i, "favorite"],
+  [/\btravell(?:ing|ed|ers?)\b/i, "traveling / traveled / traveler"],
+  [/\borganis(?:e|ed|es|ing|ation)\b/i, "organize"],
+  [/\bprogrammes?\b/, "program"],
+  [/\btheatres?\b/, "theater"],
+  [/\bcheques?\b/i, "check"],
+  [/\bgrey\b/i, "gray"],
+];
+
 /** Administrative facts and road trivia that don't help a visitor plan. */
 const TRIVIA = [
   /\bpopulation\b/i,
@@ -249,7 +272,9 @@ export function runChecks({
     }
   }
 
-  const reviewText = mdxToText(withoutMethodology(body)) + "\n\n" + faqText;
+  // FAQ questions may be phrased as a reader asks them ("Do I need to book?").
+  const faqAnswers = draft.faq.map((f) => f.answer).join("\n\n");
+  const reviewText = mdxToText(withoutMethodology(body)) + "\n\n" + faqAnswers;
   const first = reviewText.match(FIRST_PERSON);
   if (first)
     err(
@@ -294,6 +319,12 @@ export function runChecks({
       `${sentences.length} lines: ${sentences.map((x) => `"${x.trim().slice(0, 60)}"`).join("; ")}`,
       `Keep at most ${MAX_CHECK_LINES} "ask the estate / check with the tourist office" lines on the page; cut the rest or state the fact instead.`,
     );
+  }
+
+  for (const [re, us] of BRITISH_TERMS) {
+    const m = readable.match(re);
+    if (m)
+      err("american_english", m[0], `Use American English: write "${us}" instead of "${m[0]}".`);
   }
 
   for (const re of TRIVIA) {
@@ -341,7 +372,7 @@ function around(text: string, index: number, length: number): string {
 
 /** A model finding whose own fix says nothing needs to change. */
 export function isWithdrawn(f: Finding): boolean {
-  return /\b(?:no (?:change|fix|edit)s? (?:is |are )?needed|nothing to (?:change|fix)|(?:this )?finding is withdrawn|withdraw(?:n)? this|dismiss this(?: one)?|this (?:is acceptable|passes)|is correct, so no)\b/i.test(
+  return /\b(?:no (?:change|fix|edit)s? (?:is |are )?needed|nothing to (?:change|fix)|(?:this )?finding is withdrawn|withdraw(?:n)? this|dismiss this(?: one)?|this (?:is acceptable|passes|is sourced)|is correct, so no|so no change(?: here)?|not a (?:number|trivia|style) problem)\b/i.test(
     f.fix,
   );
 }

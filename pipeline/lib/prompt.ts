@@ -211,7 +211,9 @@ export function draftUserText(brief: DraftBrief): string {
     `# Tours (${tours.length}, owner's rank order)`,
     tours.length
       ? JSON.stringify(tours.map(tourBrief), null, 2)
-      : "None. Don't mention booking tours.",
+      : target.row.target === "articles"
+        ? "None curated for this page. Don't suggest booking a tour through the site. You may name official, non-commercial tours and visits from the fact sheet (tourist office tours, the Cité du Vin, interprofession visits, estates' own visits)."
+        : "None here: this page shows tours from the site's Tours tab itself. You may name official, non-commercial tours and visits from the fact sheet (tourist office tours, the Cité du Vin, interprofession visits, estates' own visits).",
     `# Hotels (${hotels.length})`,
     hotels.length ? JSON.stringify(hotels.map(hotelBrief), null, 2) : "None. Don't name hotels.",
     "# Internal links you may use",

@@ -169,7 +169,12 @@ export async function convert(
   return { variants, width, height, keptXmp };
 }
 
-/** Uploads one file to Vercel Blob (public, fixed path) and returns its URL. */
+/**
+ * Uploads one file to Vercel Blob (public, fixed path) and returns its URL.
+ * A read-write token is passed explicitly when set: the SDK otherwise
+ * prefers OIDC with BLOB_STORE_ID, which can name a different store when a
+ * project has more than one connected.
+ */
 export async function upload(
   pathname: string,
   buffer: Buffer,
@@ -177,6 +182,7 @@ export async function upload(
 ): Promise<string> {
   const blob = await put(pathname, buffer, {
     access: "public",
+    token: process.env.BLOB_READ_WRITE_TOKEN || undefined,
     contentType,
     addRandomSuffix: false,
     allowOverwrite: true,

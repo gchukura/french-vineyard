@@ -20,7 +20,7 @@ Colours: chalk #F7F3EC (background), parchment #EFE8DB (surfaces), cellar #2B232
 - Write tests for lib/ functions with Vitest. Run `npm run lint && npm run typecheck && npm test` before declaring any task done.
 
 ## Sheet tabs and key columns
-Regions: slug, name, name_fr, tagline, intro_mdx, hero_image, hero_credit, hero_license, hero_is_ai, lat, lng, airport, tgv_from_paris, best_months, signature_grape, unesco, gyg_location_id, status, updated_at
+Regions: slug, name, name_fr, tagline, intro_mdx, hero_image, hero_credit, hero_license, hero_source_url, hero_is_ai, lat, lng, airport, tgv_from_paris, best_months, signature_grape, unesco, gyg_location_id, status, updated_at
 SubRegions: slug, region_slug, name, appellation_facts_json, intro_mdx, hero_image..., status
 Towns: slug, region_slug, subregion_slug, name, intro_mdx, body_mdx, lat, lng, station, estates_json, faq_json, hero_image..., status, updated_at
 Articles: slug, page_type (guide|ranked_list|hotel_roundup|itinerary|practical), region_slug, town_slug, title, standfirst, meta_description, body_mdx, faq_json, schema_type, tour_ids, hotel_ids, tags, cluster, target_keyword, secondary_keywords, search_intent, hero_image..., status, published_at, updated_at, refresh_after

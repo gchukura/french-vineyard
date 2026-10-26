@@ -1,13 +1,18 @@
 import { LegalPage, legalMetadata, type LegalDef } from "@/components/page/LegalPage";
-import { getSiteData } from "@/lib/data";
+import { usedOn } from "@/lib/credit";
+import { getImages } from "@/lib/sheets";
 
 const DEF: LegalDef = { key: "image_credits_mdx", title: "Image credits", path: "/image-credits/" };
 
 export const generateMetadata = () => legalMetadata(DEF);
 
-/** Generated from the Images tab; image_credits_mdx in Config adds an optional intro. */
+/**
+ * Every row of the Images tab, whatever its status: an image may be on a
+ * page before its row is tidied up, and it still needs its credit.
+ * image_credits_mdx in Config adds an optional intro.
+ */
 export default async function ImageCredits() {
-  const { images } = await getSiteData();
+  const images = await getImages({ includeDrafts: true });
   return (
     <LegalPage def={DEF}>
       {images.length ? (
@@ -24,13 +29,10 @@ export default async function ImageCredits() {
               </tr>
             </thead>
             <tbody>
-              {images.map((img) => (
-                <tr key={img.url} className="odd:bg-surface">
+              {images.map((img, i) => (
+                <tr key={`${img.url}-${i}`} className="odd:bg-surface">
                   <th scope="row" className="px-4 py-2 text-left font-medium">
                     {img.alt || img.url.split("/").pop()}
-                    {img.is_ai ? (
-                      <span className="block text-xs text-muted">AI-generated illustration</span>
-                    ) : null}
                   </th>
                   <td className="px-4 py-2">
                     {img.source_url ? (
@@ -47,7 +49,25 @@ export default async function ImageCredits() {
                     )}
                   </td>
                   <td className="px-4 py-2">{img.license || "—"}</td>
-                  <td className="px-4 py-2">{img.used_on || "—"}</td>
+                  <td className="px-4 py-2">
+                    {usedOn(img.used_on).length
+                      ? usedOn(img.used_on).map((page) =>
+                          page.startsWith("/") ? (
+                            <a
+                              key={page}
+                              href={page}
+                              className="block underline underline-offset-2"
+                            >
+                              {page}
+                            </a>
+                          ) : (
+                            <span key={page} className="block">
+                              {page}
+                            </span>
+                          ),
+                        )
+                      : "—"}
+                  </td>
                 </tr>
               ))}
             </tbody>

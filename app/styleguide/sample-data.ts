@@ -17,7 +17,6 @@ export const sampleHero = {
   image: {
     src: img("hero"),
     alt: "Abstract illustration of rolling vineyard hills",
-    isAi: false,
     credit: "Sample illustration",
   },
   eyebrow: "Wine region guide",

@@ -1,0 +1,7 @@
+# Source pages of images the owner has rejected. The images command never
+# offers these again, for any page. One URL per line; # starts a comment.
+
+# HDR halos (Blaye and Bourg, 2026-10-26)
+https://commons.wikimedia.org/wiki/File:Cars,_Gironde.jpg
+# People at café tables, extreme panorama (Saint-Émilion underground monuments, 2026-10-26)
+https://commons.wikimedia.org/wiki/File:Saint-Emilion_33_Place_2013.jpg

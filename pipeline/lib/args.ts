@@ -7,6 +7,7 @@ export const COMMANDS = [
   "refresh",
   "run",
   "seed",
+  "images",
 ] as const;
 export type Command = (typeof COMMANDS)[number];
 
@@ -38,13 +39,14 @@ Commands:
   refresh <n>     re-research up to n published rows past refresh_after
   run             research, draft, check and publish in sequence
   seed --file <f> append Queue rows from a JSON array (skips existing ids)
+  images <n>      hero images for up to n published rows with no hero_image
 
 Options:
   --max <n>          same as the positional n (default 10)
   --dry-run          read the Sheet but write nothing; drafts go to pipeline/.dry-run/
   --no-redraft       check only: grade, and leave a failing draft in drafted
   --queue-file <f>   use Queue rows from a JSON file instead of the Queue tab
-  --only <ids>       comma-separated Queue ids
+  --only <ids>       comma-separated Queue ids (images: row slugs)
   --budget <usd>     spend cap for this run (default PIPELINE_BUDGET_USD)`;
 
 export function parseArgs(argv: string[]): Args {

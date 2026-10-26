@@ -1,5 +1,6 @@
 import Image from "next/image";
 
+import { ImageCredit } from "@/components/ImageCredit";
 import { SIZES } from "@/components/Picture";
 
 export type HeroImage = {
@@ -7,7 +8,7 @@ export type HeroImage = {
   alt: string;
   credit?: string;
   license?: string;
-  isAi?: boolean;
+  sourceUrl?: string;
 };
 
 /** Full-bleed hero with the one gradient CLAUDE.md allows: a bottom-up cellar fade. */
@@ -25,9 +26,6 @@ export function Hero({
   /** The LCP image: load eagerly at high priority. Only the page's first hero. */
   priority?: boolean;
 }) {
-  const credit = [image.isAi ? "AI-generated illustration" : null, image.credit, image.license]
-    .filter(Boolean)
-    .join(" · ");
   return (
     <section className="relative isolate flex min-h-[28rem] items-end overflow-hidden bg-cellar text-chalk sm:min-h-[34rem]">
       <Image
@@ -52,9 +50,12 @@ export function Hero({
           <p className="mt-4 max-w-2xl text-lg text-chalk/90 sm:text-xl">{standfirst}</p>
         ) : null}
       </div>
-      {credit ? (
-        <p className="absolute right-3 bottom-2 text-[11px] text-chalk/75">{credit}</p>
-      ) : null}
+      <ImageCredit
+        credit={image.credit}
+        license={image.license}
+        sourceUrl={image.sourceUrl}
+        className="absolute right-3 bottom-2 max-w-[90%] text-right text-[11px] text-chalk/75"
+      />
     </section>
   );
 }

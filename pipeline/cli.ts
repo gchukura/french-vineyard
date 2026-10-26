@@ -4,6 +4,7 @@ import path from "node:path";
 
 import { check } from "./commands/check";
 import { draft } from "./commands/draft";
+import { images } from "./commands/images";
 import { init } from "./commands/init";
 import { publish } from "./commands/publish";
 import { refresh } from "./commands/refresh";
@@ -58,6 +59,9 @@ async function main() {
         break;
       case "run":
         await run(ctx);
+        break;
+      case "images":
+        await images(ctx);
         break;
     }
   } finally {

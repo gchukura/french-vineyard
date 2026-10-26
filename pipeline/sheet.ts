@@ -210,6 +210,24 @@ export class SheetStore {
     return "extended";
   }
 
+  /** Adds any of `columns` missing from an existing tab's header row (and the cache). */
+  async ensureColumns(tab: string, columns: string[]): Promise<string[]> {
+    const t = await this.load(tab);
+    const missing = columns.filter((c) => !t.headers.includes(c));
+    if (!missing.length) return [];
+    this.writes.push({ tab, op: "create_tab", values: { add_columns: missing.join(",") } });
+    if (!this.dryRun) {
+      const sheet = (await this.getDoc()).sheetsByTitle[tab];
+      const all = [...t.headers, ...missing];
+      if (sheet.columnCount < all.length)
+        await sheet.resize({ rowCount: sheet.rowCount, columnCount: all.length });
+      await sheet.setHeaderRow(all);
+    }
+    t.headers = [...t.headers, ...missing];
+    for (const r of t.rows) for (const c of missing) r.data[c] = "";
+    return missing;
+  }
+
   private assertColumns(tab: string, headers: string[], values: Record<string, string>) {
     const missing = Object.keys(values).filter((k) => !headers.includes(k));
     if (missing.length) throw new Error(`${tab} is missing column(s): ${missing.join(", ")}`);

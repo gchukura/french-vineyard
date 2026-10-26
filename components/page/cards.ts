@@ -82,7 +82,12 @@ export const hotelPin = (h: Hotel): MapPin[] =>
 
 export const heroOf = (
   d: SiteData,
-  row: { hero_image?: string; hero_credit?: string; hero_license?: string; hero_is_ai: boolean },
+  row: {
+    hero_image?: string;
+    hero_credit?: string;
+    hero_license?: string;
+    hero_source_url?: string;
+  },
 ) =>
   row.hero_image
     ? {
@@ -90,6 +95,6 @@ export const heroOf = (
         alt: altFor(d, row.hero_image),
         credit: row.hero_credit,
         license: row.hero_license,
-        isAi: row.hero_is_ai,
+        sourceUrl: row.hero_source_url,
       }
     : null;

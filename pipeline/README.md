@@ -1,6 +1,6 @@
 # Content pipeline
 
-A Node CLI (run with tsx) that researches, drafts, checks and publishes pages into the content Sheet. It runs nightly from `.github/workflows/pipeline.yml` and can be run locally.
+A Node CLI (run with tsx) that researches, drafts, checks and publishes pages into the content Sheet. `.github/workflows/pipeline.yml` runs it weekly (Sundays, 02:00 UTC) for refreshes only: `refresh` re-researches published rows past `refresh_after`, and `publish` puts the refreshed pages that pass check live. New Queue rows are run locally (or by hand) with `run`.
 
 ```sh
 npm run pipeline -- init                 # create the Queue, Facts and Queries tabs

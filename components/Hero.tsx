@@ -9,7 +9,6 @@ export type HeroImage = {
   credit?: string;
   license?: string;
   sourceUrl?: string;
-  isAi?: boolean;
 };
 
 /** Full-bleed hero with the one gradient CLAUDE.md allows: a bottom-up cellar fade. */
@@ -55,7 +54,6 @@ export function Hero({
         credit={image.credit}
         license={image.license}
         sourceUrl={image.sourceUrl}
-        isAi={image.isAi}
         className="absolute right-3 bottom-2 max-w-[90%] text-right text-[11px] text-chalk/75"
       />
     </section>

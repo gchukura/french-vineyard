@@ -9,16 +9,14 @@ export function ImageCredit({
   credit,
   license,
   sourceUrl,
-  isAi,
   className = "",
 }: {
   credit?: string;
   license?: string;
   sourceUrl?: string;
-  isAi?: boolean;
   className?: string;
 }) {
-  const caption = imageCaption({ credit, license, isAi });
+  const caption = imageCaption({ credit, license });
   if (!caption) return null;
   return (
     <p className={className}>

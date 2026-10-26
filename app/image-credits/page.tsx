@@ -1,4 +1,5 @@
 import { LegalPage, legalMetadata, type LegalDef } from "@/components/page/LegalPage";
+import { usedOn } from "@/lib/credit";
 import { getImages } from "@/lib/sheets";
 
 const DEF: LegalDef = { key: "image_credits_mdx", title: "Image credits", path: "/image-credits/" };
@@ -32,9 +33,6 @@ export default async function ImageCredits() {
                 <tr key={`${img.url}-${i}`} className="odd:bg-surface">
                   <th scope="row" className="px-4 py-2 text-left font-medium">
                     {img.alt || img.url.split("/").pop()}
-                    {img.is_ai ? (
-                      <span className="block text-xs text-muted">AI-generated illustration</span>
-                    ) : null}
                   </th>
                   <td className="px-4 py-2">
                     {img.source_url ? (
@@ -52,13 +50,23 @@ export default async function ImageCredits() {
                   </td>
                   <td className="px-4 py-2">{img.license || "—"}</td>
                   <td className="px-4 py-2">
-                    {img.used_on?.startsWith("/") ? (
-                      <a href={img.used_on} className="underline underline-offset-2">
-                        {img.used_on}
-                      </a>
-                    ) : (
-                      img.used_on || "—"
-                    )}
+                    {usedOn(img.used_on).length
+                      ? usedOn(img.used_on).map((page) =>
+                          page.startsWith("/") ? (
+                            <a
+                              key={page}
+                              href={page}
+                              className="block underline underline-offset-2"
+                            >
+                              {page}
+                            </a>
+                          ) : (
+                            <span key={page} className="block">
+                              {page}
+                            </span>
+                          ),
+                        )
+                      : "—"}
                   </td>
                 </tr>
               ))}

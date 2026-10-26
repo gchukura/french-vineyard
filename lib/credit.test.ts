@@ -1,18 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import { imageCaption } from "./credit";
+import { imageCaption, usedOn } from "./credit";
+
+describe("usedOn", () => {
+  it("splits the used_on cell into pages", () => {
+    expect(usedOn("/regions/champagne/, /towns/reims/ ,/regions/champagne/")).toEqual([
+      "/regions/champagne/",
+      "/towns/reims/",
+    ]);
+    expect(usedOn("")).toEqual([]);
+    expect(usedOn(undefined)).toEqual([]);
+  });
+});
 
 describe("imageCaption", () => {
-  it("credits author, source and licence for photos", () => {
+  it("credits author, source and licence", () => {
     expect(imageCaption({ credit: "Jane Doe / Wikimedia Commons", license: "CC BY-SA 4.0" })).toBe(
       "Photo: Jane Doe / Wikimedia Commons, CC BY-SA 4.0",
-    );
-  });
-
-  it("labels generated images whatever the credit", () => {
-    expect(imageCaption({ isAi: true })).toBe("AI-generated illustration");
-    expect(imageCaption({ isAi: true, credit: "Generated with flux-2-pro" })).toBe(
-      "AI-generated illustration · Generated with flux-2-pro",
     );
   });
 

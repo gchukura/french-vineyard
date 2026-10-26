@@ -26,7 +26,13 @@ export function PageTop({
   eyebrow?: string;
   title: string;
   standfirst?: string;
-  image?: { src: string; alt: string; credit?: string; license?: string; isAi?: boolean } | null;
+  image?: {
+    src: string;
+    alt: string;
+    credit?: string;
+    license?: string;
+    sourceUrl?: string;
+  } | null;
   crumbs: Crumb[];
 }) {
   return (

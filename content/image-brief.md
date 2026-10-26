@@ -13,10 +13,12 @@ Hero images for FrenchVineyard.com, a travel guide to French wine regions. A her
 ## Hard rejects (score 0)
 
 - People drinking, glasses raised, toasts, parties, crowds celebrating, or anyone visibly drunk.
+- People seated at café, bar or restaurant tables, including terraces with diners or drinkers, however small or distant in the frame.
 - Glasses of wine as the main subject, bottles as the main subject, wine being poured.
 - Logos, brand names or readable labels on bottles, barrels, signs or vehicles; watermarks; captions or text overlays.
 - Advertising or anything that sells wine (price tags, shop shelves, promotions).
-- Collages, frames, heavy filters, HDR halos, tilted horizons, fisheye, illustrations or renders presented as photos.
+- HDR processing: light or dark halos along the skyline, trees or roofs; glowing or crunchy over-sharpened edges; unnaturally saturated, flat-toned skies. Any visible halo is a reject, even on an otherwise strong photo.
+- Collages, frames, heavy filters, tilted horizons, fisheye, illustrations, renders or AI-generated images.
 - Identifiable faces in close-up.
 
 ## Weaker but usable
@@ -24,7 +26,3 @@ Hero images for FrenchVineyard.com, a travel guide to French wine regions. A her
 - Cityscapes without vines (fine for a city page, weak for a vineyard topic).
 - A cellar with barrels whose stencilled marks are unreadable.
 - Winter vines, mist, harvest machinery.
-
-## For generated images (only for generic topics that name no real place)
-
-A photographic look of a generic French vineyard or cellar scene that matches the brief above: warm low sun, low horizon, vine rows or a chalk cellar, no people drinking, no glasses, no bottles in focus, no text, no logos, no recognizable landmark or building. Never depict a real, named place.

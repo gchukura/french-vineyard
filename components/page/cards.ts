@@ -87,7 +87,6 @@ export const heroOf = (
     hero_credit?: string;
     hero_license?: string;
     hero_source_url?: string;
-    hero_is_ai: boolean;
   },
 ) =>
   row.hero_image
@@ -97,6 +96,5 @@ export const heroOf = (
         credit: row.hero_credit,
         license: row.hero_license,
         sourceUrl: row.hero_source_url,
-        isAi: row.hero_is_ai,
       }
     : null;

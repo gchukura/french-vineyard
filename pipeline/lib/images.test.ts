@@ -2,15 +2,17 @@ import { describe, expect, it } from "vitest";
 
 import {
   acceptedLicense,
+  broadQueries,
   creditXmp,
   dedupeCandidates,
+  departmentFor,
   isFresh,
   isLandscape,
-  namesPlace,
   outputWidths,
   parseCommons,
   parsePexels,
   parsePixabay,
+  parseRejects,
   pickBest,
   searchQueries,
   stripHtml,
@@ -184,43 +186,66 @@ const article = (name: string, over: Partial<ImageTarget> = {}): ImageTarget => 
   name,
   pageType: "guide",
   path: "/x/",
+  parents: [],
   ...over,
 });
-const PLACES = ["Champagne", "Épernay", "Côte des Blancs", "Aÿ", "Reims"];
-
-describe("namesPlace", () => {
-  it("treats every place page as a named place", () => {
-    expect(namesPlace({ tab: "Towns", slug: "ay", name: "Aÿ", path: "/towns/ay/" }, PLACES)).toBe(
-      true,
-    );
-    expect(namesPlace({ tab: "Regions", slug: "x", name: "X", path: "/" }, [])).toBe(true);
-  });
-
-  it("finds place names in article titles, accents and case aside", () => {
-    expect(namesPlace(article("Reims or Epernay: Trains Compared"), PLACES)).toBe(true);
-    expect(namesPlace(article("Walking the cote des blancs"), PLACES)).toBe(true);
-    expect(namesPlace(article("Harvest guide", { slug: "champagne-harvest" }), PLACES)).toBe(true);
-    expect(namesPlace(article("Tasting basics", { townName: "Beaune" }), PLACES)).toBe(true);
-  });
-
-  it("lets generic topics through, without partial-word matches", () => {
-    expect(namesPlace(article("How Wine Tasting Works: Etiquette and Fees"), PLACES)).toBe(false);
-    expect(namesPlace(article("Ayurvedic Picnics"), PLACES)).toBe(false);
-  });
-});
+const town: ImageTarget = { tab: "Towns", slug: "ay", name: "Aÿ", path: "/", parents: [] };
 
 describe("searchQueries", () => {
   it("searches place pages by name and article subjects before their region", () => {
-    expect(searchQueries({ tab: "Towns", slug: "ay", name: "Aÿ", path: "/" })).toEqual([
-      "Aÿ vineyards",
-      "Aÿ vignes",
-      "Aÿ",
-    ]);
+    expect(searchQueries(town)).toEqual(["Aÿ vineyards", "Aÿ vignes", "Aÿ"]);
     expect(
       searchQueries(
         article("Dom Pérignon Hautvillers Abbey: Church and Tomb", { regionName: "Champagne" }),
       ),
     ).toEqual(["Dom Pérignon Hautvillers Abbey", "Champagne vineyards", "Champagne wine cellar"]);
+  });
+});
+
+describe("broadQueries", () => {
+  it("widens to wine area, region and département, skipping queries already run", () => {
+    const t = {
+      ...town,
+      areaName: "Vallée de la Marne",
+      regionName: "Champagne",
+      department: "Marne",
+    };
+    expect(broadQueries(t)).toEqual([
+      "Vallée de la Marne vignoble",
+      "Vallée de la Marne vineyards",
+      "vignoble Champagne",
+      "Champagne vignoble",
+      "Champagne vineyards",
+      "vignoble Marne",
+      "Marne vignoble",
+      "Marne vineyards",
+    ]);
+    // A region page already searched "Champagne vignoble" and "Champagne vineyards".
+    expect(
+      broadQueries({
+        tab: "Regions",
+        slug: "champagne",
+        name: "Champagne",
+        regionName: "Champagne",
+        path: "/",
+        parents: [],
+      }),
+    ).toEqual(["vignoble Champagne"]);
+  });
+
+  it("finds the département by wine area, then by region", () => {
+    expect(departmentFor("cote-des-bar", "champagne")).toBe("Aube");
+    expect(departmentFor(undefined, "champagne")).toBe("Marne");
+    expect(departmentFor("unknown", "burgundy")).toBe("Côte-d'Or");
+    expect(departmentFor()).toBeUndefined();
+  });
+});
+
+describe("parseRejects", () => {
+  it("reads one URL per line and ignores comments and blanks", () => {
+    expect(
+      parseRejects("# owner rejects\n\nhttps://a/1  # HDR\n  https://b/2\n#https://c/3\n"),
+    ).toEqual(["https://a/1", "https://b/2"]);
   });
 });
 
@@ -269,20 +294,18 @@ describe("output", () => {
     );
   });
 
-  it("writes credit XMP, escaped, with the AI source type only for generated images", () => {
+  it("writes credit XMP, escaped, marked as rights-managed unless public domain", () => {
     const xmp = creditXmp({
       author: "A & B",
       credit: "A & B / Pexels",
       license: "Pexels License",
       sourceUrl: "https://p/1",
-      isAi: false,
     });
     expect(xmp).toContain("<rdf:li>A &amp; B</rdf:li>");
     expect(xmp).toContain("<dc:source>https://p/1</dc:source>");
     expect(xmp).toContain("<xmpRights:Marked>True</xmpRights:Marked>");
-    expect(xmp).not.toContain("trainedAlgorithmicMedia");
-    expect(creditXmp({ author: "x", credit: "x", license: "AI-generated", isAi: true })).toContain(
-      "trainedAlgorithmicMedia",
+    expect(creditXmp({ author: "x", credit: "x", license: "CC0" })).toContain(
+      "<xmpRights:Marked>False</xmpRights:Marked>",
     );
   });
 

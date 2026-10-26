@@ -78,17 +78,20 @@ The model then grades the same rules plus unsourced claims and style. A draft pa
 
 ## Hero images (`images`)
 
-`images [n]` gives up to n published Regions, SubRegions, Towns and Articles rows with an empty `hero_image` a hero, in that tab order. It doesn't touch the Queue.
+`images [n]` gives up to n published Regions, SubRegions, Towns and Articles rows with an empty `hero_image` a hero photo, a tab at a time in that order, so parents are done before their children. It doesn't touch the Queue. **It never generates images**, and every row and Images line it writes has `hero_is_ai` / `is_ai` set to `FALSE`.
 
-1. **Search**, filling up to 8 candidates in this order, with the queries from `searchQueries` (place name + "vineyards", "vignoble"/"vignes"; for articles the title's subject, then the region):
+1. **Search**, filling up to 8 candidates in this order, first with the specific queries from `searchQueries` (place name + "vineyards", "vignoble"/"vignes"; for articles the title's subject, then the region):
    - **Wikimedia Commons** API with a descriptive User-Agent carrying `IMAGES_CONTACT_EMAIL`. Kept only when the licence is CC0, CC BY, CC BY-SA or public domain, the file is JPEG/PNG/WebP/TIFF, landscape (width/height ≥ 1.25), at least 1600 px wide, under 50 MB, and not personality-restricted.
    - **Pixabay** (`PIXABAY_API_KEY`), responses cached 24 hours in `pipeline/.cache/pixabay/`, files downloaded, never hotlinked. Standard keys only get 1280 px files, below the 1600 px floor, so Pixabay contributes only with full API access (`fullHDURL`/`imageURL`).
    - **Pexels** (`PEXELS_API_KEY`), with photographer, photographer URL and photo URL kept as attribution.
-     Images already on the site (Images `source_url`, rows' `hero_source_url`) are skipped, so pages don't share a hero.
-2. **Score**: one vision call (`PIPELINE_IMAGE_MODEL`, default `PIPELINE_MODEL`) sees 768 px previews of every candidate with their source titles, `content/prompts/image-score.md` and `content/image-brief.md` (warm light, low horizon, vineyard or cellar subject; hard rejects for people drinking, raised glasses, parties, logos and labels). It returns a 0–100 score, reject reason and alt text per candidate. The best unrejected candidate at or above `IMAGES_MIN_SCORE` (default 70) wins. About $0.02 a row.
+     Images already on the site (Images `source_url`, rows' `hero_source_url`) and every source page in `content/image-rejects.txt` (photos the owner turned down) are skipped.
+2. **Score**: one vision call (`PIPELINE_IMAGE_MODEL`, default `PIPELINE_MODEL`) sees 768 px previews of every candidate with their source titles, `content/prompts/image-score.md` and `content/image-brief.md` (warm light, low horizon, vineyard or cellar subject; hard rejects for people drinking, raised glasses, parties, people at café or bar tables, HDR halos, logos and labels). It returns a 0–100 score, reject reason and alt text per candidate. The best unrejected candidate at or above `IMAGES_MIN_SCORE` (default 70) wins. About $0.02 a pass.
+   If nothing wins, a **broad pass** searches and scores again with `broadQueries`: the wine area (of the page or its town), the region and the département (`DEPARTMENTS` in `pipeline/lib/images.ts`), each with "vignoble" or "vineyards".
 3. **Store**: the original is downloaded and converted with sharp to AVIF and WebP at 640, 1024, 1600 and 2400 px (never upscaled, so a 1920 px source stops at 1600). EXIF, ICC and XMP are kept; WebP and AVIF can't carry an IPTC-IIM block, so when the source has no XMP a packet with IPTC Core creator, credit, rights and source is added. Files go to Vercel Blob at `images/<tab>/<slug>-<hash>-<width>.<ext>`.
 4. **Write**: the row gets `hero_image` (the largest WebP; next/image resizes it to the site's widths), `hero_credit`, `hero_license`, `hero_source_url` and `hero_is_ai=FALSE`; the Images tab gets `url`, `alt`, `credit`, `license`, `source_url`, `is_ai`, `used_on` (the page path). Missing `hero_source_url` and Images columns are added. One revalidate call follows.
-5. **Generate, rarely**: with no pick, a row that names no real place gets a FLUX image (`BFL_API_KEY`, `FLUX_MODEL`, default `flux-2-pro`, 2400×1344) from the brief's "generated images" section plus the page topic. It is scored like a photo and kept only if it passes, with `hero_is_ai=TRUE` and an XMP digital-source-type of `trainedAlgorithmicMedia`. A row names a real place when it is a region, wine area or town page, an article with a town, an article whose title or slug contains any region, wine-area or town name (or France or Paris), or the scorer says the topic names a place. Any one of those rules out generation; such rows are left without a hero and listed as `none` in the report.
+5. **Share a parent's hero**: a row still without a pick after both passes takes the hero of its nearest published parent page that has one: for an article its town, then the town's wine area, then the region; for a town its wine area, then its region; for a wine area its region. The hero columns are copied, and the page's path is added to that image's Images `used_on` (a comma-separated list), so `/image-credits/` shows every page an image is on. A row with no parent hero is left without one and listed as `none`. To give such a page its own photo later, clear its `hero_image` and run `images` again.
+
+To turn a photo down for good, add its source page URL to `content/image-rejects.txt`, clear `hero_image` on the rows that use it and run `images` again.
 
 Every run writes `picks.md` and `picks.json` (all candidates, scores, notes, the pick, credit and alt) with each pick's preview under `pipeline/.images/images-<time>/`, or `pipeline/.dry-run/images-<time>/` for a dry run, where the AVIF and WebP files are saved instead of uploaded. The site shows the credit with `components/ImageCredit.tsx` under every hero, and `/image-credits/` lists every Images row.
 
@@ -173,9 +176,8 @@ Place pages (towns, regions, sub-regions) render their own tours, hotels, estate
 | `REVALIDATE_SECRET`                                                      |                        | Same secret as the site.                                                                                                                                                                                                          |
 
 | `IMAGES_CONTACT_EMAIL` | | `images`: contact address in the Wikimedia User-Agent. Required. |
-| `BLOB_READ_WRITE_TOKEN` | | `images`: Vercel Blob token (Storage → the project's Blob store). Not needed for dry runs. |
+| `BLOB_READ_WRITE_TOKEN`, or `VERCEL_OIDC_TOKEN` + `BLOB_STORE_ID` | | `images`: Vercel Blob credentials. The OIDC pair comes from `vercel env pull` once the Blob store is connected to the Development environment; the token expires after about 12 hours, so pull again before a run. Not needed for dry runs. |
 | `PIXABAY_API_KEY`, `PEXELS_API_KEY` | | `images`: optional second and third sources; skipped when unset. |
-| `BFL_API_KEY`, `FLUX_MODEL` | `flux-2-pro` | `images`: generation for generic topics; skipped when unset. |
 | `PIPELINE_IMAGE_MODEL` | `PIPELINE_MODEL` | `images`: vision model that scores candidates. |
 | `IMAGES_MIN_SCORE` | `70` | `images`: lowest score that can be picked. |
 
@@ -192,13 +194,14 @@ pipeline/
   sheet.ts            the pipeline's Sheet access (cached reads, logged writes, rate limiting)
   claude.ts           streamed calls, pause_turn, fallbacks, batches, budget
   commands/           init, research, draft, check, publish, refresh, run, seed, images
-  media.ts            image searches, downloads, sharp conversion, Blob uploads, Flux
+  media.ts            image searches, downloads, sharp conversion, Blob uploads
   lib/                pure functions, tested with Vitest (*.test.ts)
   fixtures/dry-run-queue.json
   launch-queue.json   launch Queue rows (regions, wine areas, towns, guides, itineraries, practical pages) for `seed`
 content/
   prompts/            research.md, draft.md, redraft.md, check.md, image-score.md
   image-brief.md      what a hero image should and must not show
+  image-rejects.txt   source pages of photos the owner turned down
   templates/          guide, ranked_list, hotel_roundup, itinerary, practical, town, region, subregion
   style-guide.md, banned-phrases.txt, selection-rules.md, research-blocklist.txt
 ```

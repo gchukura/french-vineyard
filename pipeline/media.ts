@@ -17,8 +17,8 @@ import {
 
 /**
  * Network, image processing and storage for the `images` command: Commons,
- * Pixabay and Pexels searches, downloads, sharp conversion, Vercel Blob
- * uploads and Flux generation.
+ * Pixabay and Pexels searches, downloads, sharp conversion and Vercel Blob
+ * uploads. Nothing here generates images; the site never uses generated ones.
  */
 
 const ROOT = path.resolve(import.meta.dirname, "..");
@@ -183,37 +183,4 @@ export async function upload(
     cacheControlMaxAge: 60 * 60 * 24 * 365,
   });
   return blob.url;
-}
-
-// ---------------------------------------------------------------------------
-// Flux
-// ---------------------------------------------------------------------------
-
-/** Generates one 2400×1344 image with Black Forest Labs' API and downloads it (sample URLs expire in 10 minutes). */
-export async function generateFlux(prompt: string): Promise<{ buffer: Buffer; model: string }> {
-  const key = process.env.BFL_API_KEY;
-  if (!key) throw new Error("BFL_API_KEY is not set");
-  const model = process.env.FLUX_MODEL || "flux-2-pro";
-  const headers = { "x-key": key, accept: "application/json", "content-type": "application/json" };
-  const submit = (await (
-    await fetchOk(`https://api.bfl.ai/v1/${model}`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ prompt, width: 2400, height: 1344, output_format: "jpeg" }),
-    })
-  ).json()) as { id: string; polling_url: string };
-
-  const deadline = Date.now() + 5 * 60_000;
-  while (Date.now() < deadline) {
-    await new Promise((r) => setTimeout(r, 1_500));
-    const poll = (await (await fetchOk(submit.polling_url, { headers })).json()) as {
-      status: string;
-      result?: { sample?: string };
-    };
-    if (poll.status === "Ready" && poll.result?.sample)
-      return { buffer: await fetchBuffer(poll.result.sample), model };
-    if (/error|failed|moderated/i.test(poll.status))
-      throw new Error(`Flux ${submit.id}: ${poll.status}`);
-  }
-  throw new Error(`Flux ${submit.id}: timed out`);
 }

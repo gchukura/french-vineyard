@@ -4,12 +4,12 @@ import { z } from "zod";
 
 /**
  * Pure helpers for the `images` command: provider response parsing, licence
- * and size filters, search queries, the named-place rule, scoring and the
+ * and size filters, search queries (specific, then broad), scoring and the
  * names and metadata of what gets uploaded. Network, sharp and Blob live in
  * pipeline/media.ts.
  */
 
-export type Provider = "wikimedia" | "pixabay" | "pexels" | "flux";
+export type Provider = "wikimedia" | "pixabay" | "pexels";
 
 export type Candidate = {
   provider: Provider;
@@ -247,31 +247,16 @@ export type ImageTarget = {
   name: string;
   pageType?: string;
   regionName?: string;
+  /** Wine area of the page or of its town, when it has one. */
+  areaName?: string;
   townName?: string;
+  /** French département, for the broad search pass. */
+  department?: string;
   /** Site path, written to Images.used_on. */
   path: string;
+  /** Parent pages whose hero this page may share, nearest first. */
+  parents: { tab: ImageTab; slug: string }[];
 };
-
-/** "Épernay" -> "epernay", for matching place names in titles. */
-export const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-
-/**
- * Whether the page names a real place, which rules out a generated image
- * (CLAUDE.md). Place pages always do; an article does when it belongs to a
- * town or its title or slug contains any known place name. The scorer's own
- * judgment is added on top of this, never instead of it.
- */
-export function namesPlace(target: ImageTarget, placeNames: string[]): boolean {
-  if (target.tab !== "Articles") return true;
-  if (target.townName) return true;
-  const haystack = ` ${fold(`${target.name} ${target.slug.replace(/-/g, " ")}`).replace(/[^a-z0-9]+/g, " ")} `;
-  return placeNames.some((p) => {
-    const needle = fold(p)
-      .replace(/[^a-z0-9]+/g, " ")
-      .trim();
-    return needle.length > 2 && haystack.includes(` ${needle} `);
-  });
-}
 
 /** Search queries, most specific first. Commons, Pixabay and Pexels share them. */
 export function searchQueries(target: ImageTarget): string[] {
@@ -291,6 +276,60 @@ export function searchQueries(target: ImageTarget): string[] {
   return [...new Set(qs.map((q) => q.replace(/\s+/g, " ").trim()).filter(Boolean))];
 }
 
+/**
+ * Départements for the broad search pass, by wine area, with each region's
+ * main département for pages that have no wine area.
+ */
+export const DEPARTMENTS: Record<string, string> = {
+  "montagne-de-reims": "Marne",
+  "vallee-de-la-marne": "Marne",
+  "cote-des-blancs": "Marne",
+  "cote-de-sezanne": "Marne",
+  "cote-des-bar": "Aube",
+  medoc: "Gironde",
+  graves: "Gironde",
+  sauternais: "Gironde",
+  libournais: "Gironde",
+  "entre-deux-mers": "Gironde",
+  chablis: "Yonne",
+  "cote-de-nuits": "Côte-d'Or",
+  "cote-de-beaune": "Côte-d'Or",
+  "cote-chalonnaise": "Saône-et-Loire",
+  maconnais: "Saône-et-Loire",
+  // Regions
+  champagne: "Marne",
+  bordeaux: "Gironde",
+  burgundy: "Côte-d'Or",
+};
+
+export const departmentFor = (areaSlug?: string, regionSlug?: string): string | undefined =>
+  (areaSlug && DEPARTMENTS[areaSlug]) || (regionSlug && DEPARTMENTS[regionSlug]) || undefined;
+
+/**
+ * Broader queries for rows the specific pass left without a pick: the wine
+ * area, the region and the département, each with "vignoble". Queries the
+ * specific pass already ran are left out.
+ */
+export function broadQueries(target: ImageTarget): string[] {
+  const { areaName, regionName, department, name } = target;
+  const qs: string[] = [];
+  if (areaName && areaName !== name) qs.push(`${areaName} vignoble`, `${areaName} vineyards`);
+  if (regionName)
+    qs.push(`vignoble ${regionName}`, `${regionName} vignoble`, `${regionName} vineyards`);
+  if (department)
+    qs.push(`vignoble ${department}`, `${department} vignoble`, `${department} vineyards`);
+  const specific = new Set(searchQueries(target));
+  return [...new Set(qs)].filter((q) => !specific.has(q));
+}
+
+/** Source page URLs from content/image-rejects.txt: one per line, # starts a comment. */
+export function parseRejects(text: string): string[] {
+  return text
+    .split("\n")
+    .map((l) => l.replace(/#.*/, "").trim())
+    .filter(Boolean);
+}
+
 /** Drops duplicates (same provider id or source page) and anything already used on the site. */
 export function dedupeCandidates(candidates: Candidate[], used: Set<string>): Candidate[] {
   const seen = new Set<string>();
@@ -307,7 +346,6 @@ export function dedupeCandidates(candidates: Candidate[], used: Set<string>): Ca
 // ---------------------------------------------------------------------------
 
 export const scoreSchema = z.object({
-  names_place: z.boolean(),
   scores: z.array(
     z.object({
       index: z.number().int().min(0),
@@ -356,8 +394,7 @@ const xmlEscape = (s: string) =>
 
 /**
  * An XMP packet with creator, rights and source (IPTC Core via Dublin Core
- * and xmpRights), used when the source file carries no XMP of its own. AI
- * images are marked with the IPTC digital source type for generated media.
+ * and xmpRights), used when the source file carries no XMP of its own.
  */
 export function creditXmp(p: {
   author: string;
@@ -365,24 +402,19 @@ export function creditXmp(p: {
   license: string;
   licenseUrl?: string;
   sourceUrl?: string;
-  isAi: boolean;
 }): string {
   const rights = `${p.credit}${p.license ? `. ${p.license}` : ""}`;
-  const dst = p.isAi
-    ? `\n   <Iptc4xmpExt:DigitalSourceType>http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia</Iptc4xmpExt:DigitalSourceType>`
-    : "";
   return `<?xpacket begin="﻿" id="W5M0MpCehiHzreSzNTczkc9d"?>
 <x:xmpmeta xmlns:x="adobe:ns:meta/">
  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
   <rdf:Description rdf:about=""
     xmlns:dc="http://purl.org/dc/elements/1.1/"
     xmlns:xmpRights="http://ns.adobe.com/xap/1.0/rights/"
-    xmlns:photoshop="http://ns.adobe.com/photoshop/1.0/"
-    xmlns:Iptc4xmpExt="http://iptc.org/std/Iptc4xmpExt/2008-02-29/">
+    xmlns:photoshop="http://ns.adobe.com/photoshop/1.0/">
    <dc:creator><rdf:Seq><rdf:li>${xmlEscape(p.author)}</rdf:li></rdf:Seq></dc:creator>
    <dc:rights><rdf:Alt><rdf:li xml:lang="x-default">${xmlEscape(rights)}</rdf:li></rdf:Alt></dc:rights>
    <photoshop:Credit>${xmlEscape(p.credit)}</photoshop:Credit>${p.sourceUrl ? `\n   <dc:source>${xmlEscape(p.sourceUrl)}</dc:source>` : ""}${p.licenseUrl ? `\n   <xmpRights:WebStatement>${xmlEscape(p.licenseUrl)}</xmpRights:WebStatement>` : ""}
-   <xmpRights:Marked>${p.isAi || p.license === "CC0" || p.license === "Public domain" ? "False" : "True"}</xmpRights:Marked>${dst}
+   <xmpRights:Marked>${p.license === "CC0" || p.license === "Public domain" ? "False" : "True"}</xmpRights:Marked>
   </rdf:Description>
  </rdf:RDF>
 </x:xmpmeta>

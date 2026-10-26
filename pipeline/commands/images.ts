@@ -12,14 +12,17 @@ import { ESTIMATE_USD } from "../context";
 import { BudgetExceeded } from "../lib/cost";
 import { extractJsonBlock } from "../lib/facts";
 import {
+  broadQueries,
   dedupeCandidates,
+  departmentFor,
   MAX_CANDIDATES,
-  namesPlace,
+  parseRejects,
   pickBest,
   scoreSchema,
   searchQueries,
   variantPath,
   type Candidate,
+  type ImageTab,
   type ImageTarget,
   type Scored,
 } from "../lib/images";
@@ -27,7 +30,6 @@ import { pool } from "../lib/pool";
 import {
   convert,
   fetchBuffer,
-  generateFlux,
   previewJpeg,
   searchCommons,
   searchPexels,
@@ -49,20 +51,28 @@ export const HERO_COLUMNS = [
 ];
 export const IMAGES_COLUMNS = ["url", "alt", "credit", "license", "source_url", "is_ai", "used_on"];
 
+/** Parents come first, so a page that falls back to its parent's hero finds it set. */
+const TAB_ORDER: ImageTab[] = ["Regions", "SubRegions", "Towns", "Articles"];
+
 const SEARCHES = [
   ["wikimedia", searchCommons],
   ["pixabay", searchPixabay],
   ["pexels", searchPexels],
 ] as const;
 
+type Ranked = Scored & { provider: string; title: string; sourceUrl: string; pass: string };
+
 type Choice = {
   target: ImageTarget;
-  outcome: "picked" | "generated" | "none" | "error";
+  /** picked: a photo of its own; parent: shares a parent page's hero; none: neither. */
+  outcome: "picked" | "parent" | "none" | "error";
+  /** Which search pass found the pick: specific or broad. */
+  pass?: "specific" | "broad";
   reason?: string;
   candidates: number;
-  namesPlace: boolean;
   chosen?: Candidate & { score: number; alt: string; notes?: string | null };
-  scores?: (Scored & { provider: string; title: string; sourceUrl: string })[];
+  parent?: { tab: ImageTab; slug: string };
+  scores?: Ranked[];
   heroUrl?: string;
   width?: number;
   keptXmp?: boolean;
@@ -70,22 +80,31 @@ type Choice = {
 };
 
 /**
- * images [n]: hero images for published rows with an empty hero_image.
- * Commons, then Pixabay, then Pexels until MAX_CANDIDATES; a vision model
- * scores them against content/image-brief.md; the best at or above
- * IMAGES_MIN_SCORE is converted to AVIF and WebP, uploaded to Blob and
- * written to the row and the Images tab. With no pick, a generic topic (one
- * that names no real place) gets a Flux image instead.
+ * images [n]: hero photos for published rows with an empty hero_image.
+ * Each row searches Commons, then Pixabay, then Pexels with specific queries
+ * and, if nothing passes, again with broad ones (wine area, region,
+ * département). A vision model scores up to MAX_CANDIDATES per pass against
+ * content/image-brief.md; the best at or above IMAGES_MIN_SCORE is converted
+ * to AVIF and WebP, uploaded to Blob and written to the row and the Images
+ * tab. A row still without a pick shares its nearest published parent's
+ * hero. Images are never generated.
  */
 export async function images(ctx: Context): Promise<Choice[]> {
   const brief = await readFile(path.join(CONTENT, "image-brief.md"), "utf8");
   const instructions = await readFile(path.join(CONTENT, "prompts", "image-score.md"), "utf8");
+  const rejects = parseRejects(await readFile(path.join(CONTENT, "image-rejects.txt"), "utf8"));
   const threshold = Number(process.env.IMAGES_MIN_SCORE || 70);
   const model = process.env.PIPELINE_IMAGE_MODEL || ctx.config.model;
-  if (!ctx.args.dryRun && !process.env.BLOB_READ_WRITE_TOKEN)
-    throw new Error("BLOB_READ_WRITE_TOKEN is not set; run with --dry-run to preview picks");
+  const blobAuth =
+    process.env.BLOB_READ_WRITE_TOKEN ||
+    (process.env.VERCEL_OIDC_TOKEN && process.env.BLOB_STORE_ID);
+  if (!ctx.args.dryRun && !blobAuth)
+    throw new Error(
+      "No Blob credentials: set BLOB_READ_WRITE_TOKEN, or VERCEL_OIDC_TOKEN and BLOB_STORE_ID (vercel env pull). Use --dry-run to preview picks.",
+    );
 
-  const { targets, placeNames, used } = await collect(ctx);
+  const { targets, used } = await collect(ctx);
+  for (const url of rejects) used.add(url);
   const todo = targets
     .filter((t) => !ctx.args.only || ctx.args.only.includes(t.slug))
     .slice(0, ctx.args.max);
@@ -105,36 +124,46 @@ export async function images(ctx: Context): Promise<Choice[]> {
     await ctx.store.ensureColumns("Images", IMAGES_COLUMNS);
   }
 
-  const system = `${instructions}\n\n---\n\n${brief}`;
+  const o: Options = {
+    system: `${instructions}\n\n---\n\n${brief}`,
+    model,
+    threshold,
+    used,
+    outDir,
+  };
   const picks: Choice[] = [];
   let stopped = false;
 
-  await pool(todo, 3, async (target) => {
-    if (stopped) return;
-    try {
-      const pick = await imageFor(ctx, target, {
-        system,
-        model,
-        threshold,
-        placeNames,
-        used,
-        outDir,
-      });
-      picks.push(pick);
-      ctx.log(
-        `${target.tab}/${target.slug}: ${pick.outcome}${pick.chosen ? ` ${pick.chosen.provider} ${pick.chosen.score} "${pick.chosen.title}"` : ""}${pick.reason ? ` (${pick.reason})` : ""}`,
-      );
-    } catch (error) {
-      if (error instanceof BudgetExceeded) {
-        stopped = true;
-        ctx.log(error.message);
-        return;
-      }
-      const reason = (error as Error).message;
-      picks.push({ target, outcome: "error", reason, candidates: 0, namesPlace: true });
-      ctx.log(`${target.tab}/${target.slug}: error ${reason}`);
-    }
-  });
+  for (const tab of TAB_ORDER) {
+    await pool(
+      todo.filter((t) => t.tab === tab),
+      3,
+      async (target) => {
+        if (stopped) return;
+        try {
+          const pick = await imageFor(ctx, target, o);
+          picks.push(pick);
+          const what = pick.chosen
+            ? ` ${pick.pass} ${pick.chosen.provider} ${pick.chosen.score} "${pick.chosen.title}"`
+            : pick.parent
+              ? ` from ${pick.parent.tab}/${pick.parent.slug}`
+              : "";
+          ctx.log(
+            `${target.tab}/${target.slug}: ${pick.outcome}${what}${pick.reason ? ` (${pick.reason})` : ""}`,
+          );
+        } catch (error) {
+          if (error instanceof BudgetExceeded) {
+            stopped = true;
+            ctx.log(error.message);
+            return;
+          }
+          const reason = (error as Error).message;
+          picks.push({ target, outcome: "error", reason, candidates: 0 });
+          ctx.log(`${target.tab}/${target.slug}: error ${reason}`);
+        }
+      },
+    );
+  }
 
   const touched = [...new Set(picks.filter((p) => p.heroUrl).map((p) => p.target.tab))];
   if (touched.length)
@@ -144,102 +173,187 @@ export async function images(ctx: Context): Promise<Choice[]> {
     );
 
   await writeReport(outDir, picks, threshold);
+  const count = (o: Choice["outcome"]) => picks.filter((p) => p.outcome === o).length;
+  ctx.log(
+    `images: ${count("picked")} picked (${picks.filter((p) => p.pass === "broad").length} on broad queries), ${count("parent")} share a parent's hero, ${count("none")} without, ${count("error")} errors`,
+  );
   ctx.log(`images report: ${path.relative(ROOT, outDir)}/picks.md`);
   return picks;
 }
 
-/** Published place pages and articles with no hero, in tab order, plus what the rules need. */
+/** Published place pages and articles with no hero, in tab order, plus images already in use. */
 async function collect(ctx: Context) {
   const site = await ctx.siteRows();
   const pub = <T extends { status: string }>(xs: T[]) => xs.filter((x) => x.status === "published");
-  const regionName = (slug?: string) => site.regions.find((r) => r.slug === slug)?.name;
-  const townName = (slug?: string) => site.towns.find((t) => t.slug === slug)?.name;
+  const region = (slug?: string) => site.regions.find((r) => r.slug === slug);
+  const area = (slug?: string) => site.subregions.find((s) => s.slug === slug);
+  const town = (slug?: string) => site.towns.find((t) => t.slug === slug);
+  const up = (tab: ImageTab, slug?: string) => (slug ? [{ tab, slug }] : []);
 
-  const targets: ImageTarget[] = [
+  const all: (ImageTarget & { hero?: string })[] = [
     ...pub(site.regions).map((r) => ({
       tab: "Regions" as const,
       slug: r.slug,
       name: r.name,
       regionName: r.name,
+      department: departmentFor(undefined, r.slug),
       path: regionHref(r.slug),
+      parents: [],
       hero: r.hero_image,
     })),
     ...pub(site.subregions).map((s) => ({
       tab: "SubRegions" as const,
       slug: s.slug,
       name: s.name,
-      regionName: regionName(s.region_slug),
+      regionName: region(s.region_slug)?.name,
+      department: departmentFor(s.slug, s.region_slug),
       path: areaHref(s.region_slug, s.slug),
+      parents: up("Regions", s.region_slug),
       hero: s.hero_image,
     })),
     ...pub(site.towns).map((t) => ({
       tab: "Towns" as const,
       slug: t.slug,
       name: t.name,
-      regionName: regionName(t.region_slug),
+      regionName: region(t.region_slug)?.name,
+      areaName: area(t.subregion_slug)?.name,
       townName: t.name,
+      department: departmentFor(t.subregion_slug, t.region_slug),
       path: townHref(t.slug),
+      parents: [...up("SubRegions", t.subregion_slug), ...up("Regions", t.region_slug)],
       hero: t.hero_image,
     })),
-    ...pub(site.articles).map((a) => ({
-      tab: "Articles" as const,
-      slug: a.slug,
-      name: a.title,
-      pageType: a.page_type,
-      regionName: regionName(a.region_slug),
-      townName: townName(a.town_slug),
-      path: articleHref(a),
-      hero: a.hero_image,
-    })),
-  ]
-    .filter((t) => !t.hero);
+    ...pub(site.articles).map((a) => {
+      const t = town(a.town_slug);
+      return {
+        tab: "Articles" as const,
+        slug: a.slug,
+        name: a.title,
+        pageType: a.page_type,
+        regionName: region(a.region_slug ?? t?.region_slug)?.name,
+        areaName: area(t?.subregion_slug)?.name,
+        townName: t?.name,
+        department: departmentFor(t?.subregion_slug, a.region_slug ?? t?.region_slug),
+        path: articleHref(a),
+        // An article's nearest parent is its town, then the town's wine area, then the region.
+        parents: [
+          ...up("Towns", t?.slug),
+          ...up("SubRegions", t?.subregion_slug),
+          ...up("Regions", a.region_slug ?? t?.region_slug),
+        ],
+        hero: a.hero_image,
+      };
+    }),
+  ];
+  const targets: ImageTarget[] = all.filter((t) => !t.hero);
 
-  const placeNames = [
-    ...site.regions.flatMap((r) => [r.name, r.name_fr ?? ""]),
-    ...site.subregions.map((s) => s.name),
-    ...site.towns.map((t) => t.name),
-    "France",
-    "Paris",
-  ].filter(Boolean);
-
-  // Images already on the site are not offered again, so pages don't share a hero.
+  // Images already on the site are not offered again, so pages don't share a photo by accident.
   const used = new Set(
     (await ctx.store.rows("Images")).flatMap((i) => [i.source_url, i.url]).filter(Boolean),
   );
-  for (const tab of ["Regions", "SubRegions", "Towns", "Articles"])
+  for (const tab of TAB_ORDER)
     for (const r of await ctx.store.rows(tab)) if (r.hero_source_url) used.add(r.hero_source_url);
-  return { targets, placeNames, used };
+  return { targets, used };
 }
 
 type Options = {
   system: string;
   model: string;
   threshold: number;
-  placeNames: string[];
   used: Set<string>;
   outDir: string;
 };
 
 async function imageFor(ctx: Context, target: ImageTarget, o: Options): Promise<Choice> {
-  const queries = searchQueries(target);
+  const scores: Ranked[] = [];
+  let candidates = 0;
+  const passes = [
+    ["specific", searchQueries(target)],
+    ["broad", broadQueries(target)],
+  ] as const;
+
+  for (const [pass, queries] of passes) {
+    const previews = await gather(ctx, target, queries, o.used);
+    if (!previews.length) continue;
+    candidates += previews.length;
+    const scored = await score(ctx, target, previews, o);
+    scores.push(
+      ...scored.scores.map((s) => ({
+        ...s,
+        pass,
+        provider: previews[s.index]?.c.provider ?? "?",
+        title: previews[s.index]?.c.title ?? "?",
+        sourceUrl: previews[s.index]?.c.sourceUrl ?? "",
+      })),
+    );
+    // Another row in this run may have taken a candidate while this one was scored.
+    const free = scored.scores.filter(
+      (s) => previews[s.index] && !o.used.has(previews[s.index].c.sourceUrl),
+    );
+    const best = pickBest(free, previews.length, o.threshold);
+    if (!best) continue;
+    const c = previews[best.index].c;
+    o.used.add(c.sourceUrl);
+    const chosen = {
+      ...c,
+      score: best.score,
+      alt: best.alt?.trim() || target.name,
+      notes: best.notes,
+    };
+    const stored = await store(
+      ctx,
+      target,
+      chosen,
+      await fetchBuffer(c.downloadUrl),
+      previews[best.index].jpeg,
+      o,
+    );
+    return { target, outcome: "picked", pass, candidates, chosen, scores, ...stored };
+  }
+
+  const shared = await shareParent(ctx, target);
+  if (shared)
+    return {
+      target,
+      outcome: "parent",
+      candidates,
+      scores,
+      parent: shared.parent,
+      heroUrl: shared.heroUrl,
+      reason: `nothing scored ${o.threshold}+ on specific or broad queries`,
+    };
+  return {
+    target,
+    outcome: "none",
+    candidates,
+    scores,
+    reason: `nothing scored ${o.threshold}+ and no parent page has a hero`,
+  };
+}
+
+/** Candidates for one pass: Commons first, then Pixabay, then Pexels, up to MAX_CANDIDATES, with previews. */
+async function gather(
+  ctx: Context,
+  target: ImageTarget,
+  queries: readonly string[],
+  used: Set<string>,
+) {
   let candidates: Candidate[] = [];
   for (const [provider, search] of SEARCHES) {
     for (const q of queries) {
       if (candidates.length >= MAX_CANDIDATES) break;
       try {
-        candidates = dedupeCandidates([...candidates, ...(await search(q))], o.used);
+        candidates = dedupeCandidates([...candidates, ...(await search(q))], used);
       } catch (error) {
         ctx.log(`${target.slug}: ${provider} "${q}" failed: ${(error as Error).message}`);
         break;
       }
     }
   }
-  candidates = candidates.slice(0, MAX_CANDIDATES);
-
   // Previews that fail to download are dropped before scoring.
-  const previews = (
+  return (
     await Promise.all(
-      candidates.map(async (c) => {
+      candidates.slice(0, MAX_CANDIDATES).map(async (c) => {
         try {
           return { c, jpeg: await previewJpeg(await fetchBuffer(c.previewUrl)) };
         } catch {
@@ -248,96 +362,6 @@ async function imageFor(ctx: Context, target: ImageTarget, o: Options): Promise<
       }),
     )
   ).filter((x) => x !== null);
-
-  let placed = namesPlace(target, o.placeNames);
-  const base = { target, candidates: previews.length };
-
-  if (previews.length) {
-    const scores = await score(ctx, target, previews, o);
-    placed ||= scores.names_place;
-    const ranked = scores.scores.map((s) => ({
-      ...s,
-      provider: previews[s.index]?.c.provider ?? "?",
-      title: previews[s.index]?.c.title ?? "?",
-      sourceUrl: previews[s.index]?.c.sourceUrl ?? "",
-    }));
-    // Another row in this run may have taken a candidate while this one was scored.
-    const free = scores.scores.filter(
-      (s) => previews[s.index] && !o.used.has(previews[s.index].c.sourceUrl),
-    );
-    const best = pickBest(free, previews.length, o.threshold);
-    if (best) {
-      const c = previews[best.index].c;
-      o.used.add(c.sourceUrl);
-      const alt = best.alt?.trim() || target.name;
-      const chosen = { ...c, score: best.score, alt, notes: best.notes };
-      const buffer = await fetchBuffer(c.downloadUrl);
-      const stored = await store(ctx, target, chosen, buffer, previews[best.index].jpeg, false, o);
-      return { ...base, outcome: "picked", namesPlace: placed, chosen, scores: ranked, ...stored };
-    }
-    if (placed)
-      return {
-        ...base,
-        outcome: "none",
-        namesPlace: true,
-        scores: ranked,
-        reason: `nothing scored ${o.threshold}+; names a real place, so no generation`,
-      };
-  } else if (placed) {
-    return {
-      ...base,
-      outcome: "none",
-      namesPlace: true,
-      reason: "no candidates; names a real place, so no generation",
-    };
-  }
-
-  // A generic topic with no usable photo: generate one, then hold it to the same brief.
-  if (!process.env.BFL_API_KEY)
-    return {
-      ...base,
-      outcome: "none",
-      namesPlace: false,
-      reason: "generic topic, but BFL_API_KEY is not set",
-    };
-  ctx.budget.reserve(ESTIMATE_USD.flux);
-  const brief =
-    o.system.split("## For generated images")[1]?.split("\n\n").slice(1).join("\n\n").trim() ?? "";
-  const { buffer, model } = await generateFlux(
-    `${brief}\n\nTopic: ${target.name}. Photographic, natural color, 16:9 landscape.`,
-  );
-  ctx.budget.charge(ESTIMATE_USD.flux);
-  const jpeg = await previewJpeg(buffer);
-  const generated: Candidate = {
-    provider: "flux",
-    id: `flux-${target.slug}`,
-    title: `Generated for "${target.name}"`,
-    width: 2400,
-    height: 1344,
-    previewUrl: "",
-    downloadUrl: "",
-    sourceUrl: "",
-    author: "Black Forest Labs FLUX",
-    credit: `Generated with ${model} (Black Forest Labs)`,
-    license: "AI-generated",
-  };
-  const check = await score(ctx, target, [{ c: generated, jpeg }], o);
-  const ok = pickBest(check.scores, 1, o.threshold);
-  if (!ok)
-    return {
-      ...base,
-      outcome: "none",
-      namesPlace: false,
-      reason: `generated image scored ${check.scores[0]?.score ?? "?"} (${check.scores[0]?.reject_reason ?? check.scores[0]?.notes ?? ""})`,
-    };
-  const chosen = {
-    ...generated,
-    score: ok.score,
-    alt: ok.alt?.trim() || target.name,
-    notes: ok.notes,
-  };
-  const stored = await store(ctx, target, chosen, buffer, jpeg, true, o);
-  return { ...base, outcome: "generated", namesPlace: false, chosen, ...stored };
 }
 
 async function score(
@@ -349,6 +373,7 @@ async function score(
   const page = [
     `Page: ${target.tab === "Articles" ? `article (${target.pageType})` : target.tab.replace(/s$/, "").replace("SubRegion", "wine area").toLowerCase()} "${target.name}"`,
     target.townName && target.tab === "Articles" ? `Town: ${target.townName}` : "",
+    target.areaName ? `Wine area: ${target.areaName}` : "",
     target.regionName ? `Region: ${target.regionName}` : "",
   ]
     .filter(Boolean)
@@ -385,6 +410,49 @@ async function score(
   return scoreSchema.parse(extractJsonBlock(textOf(result.message.content)));
 }
 
+/**
+ * Gives the row the hero of its nearest published parent that has one, and
+ * adds the row's path to that image's Images line. Reads the raw tabs, which
+ * include heroes written earlier in this run.
+ */
+export async function shareParent(ctx: Pick<Context, "store">, target: ImageTarget) {
+  for (const parent of target.parents) {
+    const row = (await ctx.store.rows(parent.tab)).find((r) => r.slug === parent.slug);
+    if (!row?.hero_image || row.status?.trim().toLowerCase() !== "published") continue;
+    await ctx.store.update(target.tab, "slug", target.slug, {
+      hero_image: row.hero_image,
+      hero_credit: row.hero_credit ?? "",
+      hero_license: row.hero_license ?? "",
+      hero_source_url: row.hero_source_url ?? "",
+      hero_is_ai: "FALSE",
+    });
+    const line = (await ctx.store.rows("Images")).find((i) => i.url === row.hero_image);
+    if (line) {
+      const usedOn = [...new Set([...splitList(line.used_on), target.path])].join(", ");
+      await ctx.store.update("Images", "url", row.hero_image, { used_on: usedOn });
+    } else {
+      await ctx.store.append("Images", {
+        url: row.hero_image,
+        alt: "",
+        credit: row.hero_credit ?? "",
+        license: row.hero_license ?? "",
+        source_url: row.hero_source_url ?? "",
+        is_ai: "FALSE",
+        // A hero set by hand has no Images line yet; this one starts with the sharing page.
+        used_on: target.path,
+      });
+    }
+    return { parent, heroUrl: row.hero_image };
+  }
+  return undefined;
+}
+
+const splitList = (s = "") =>
+  s
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+
 /** Converts, uploads (or saves, in a dry run) and writes the row and the Images line. */
 async function store(
   ctx: Context,
@@ -392,7 +460,6 @@ async function store(
   chosen: Candidate & { alt: string },
   buffer: Buffer,
   preview: Buffer,
-  isAi: boolean,
   o: Options,
 ): Promise<Pick<Choice, "heroUrl" | "width" | "keptXmp" | "files">> {
   const { variants, width, keptXmp } = await convert(buffer, {
@@ -400,17 +467,15 @@ async function store(
     credit: chosen.credit,
     license: chosen.license,
     licenseUrl: chosen.licenseUrl,
-    sourceUrl: chosen.sourceUrl || undefined,
-    isAi,
+    sourceUrl: chosen.sourceUrl,
   });
-  const key = chosen.sourceUrl || chosen.id;
   const dir = path.join(o.outDir, `${target.tab.toLowerCase()}-${target.slug}`);
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, "preview.jpg"), preview);
 
   const urls = new Map<Variant, string>();
   for (const v of variants) {
-    const p = variantPath(target.tab, target.slug, key, v.width, v.ext);
+    const p = variantPath(target.tab, target.slug, chosen.sourceUrl, v.width, v.ext);
     if (ctx.args.dryRun) {
       await writeFile(path.join(dir, path.basename(p)), v.buffer);
       urls.set(v, `dry-run://${p}`);
@@ -427,7 +492,7 @@ async function store(
     hero_credit: chosen.credit,
     hero_license: chosen.license,
     hero_source_url: chosen.sourceUrl,
-    hero_is_ai: isAi ? "TRUE" : "FALSE",
+    hero_is_ai: "FALSE",
   });
   await ctx.store.append("Images", {
     url: heroUrl,
@@ -435,15 +500,10 @@ async function store(
     credit: chosen.credit,
     license: chosen.license,
     source_url: chosen.sourceUrl,
-    is_ai: isAi ? "TRUE" : "FALSE",
+    is_ai: "FALSE",
     used_on: target.path,
   });
-  return {
-    heroUrl,
-    width,
-    keptXmp,
-    files: [...urls.values()],
-  };
+  return { heroUrl, width, keptXmp, files: [...urls.values()] };
 }
 
 async function writeReport(dir: string, picks: Choice[], threshold: number) {
@@ -454,8 +514,9 @@ async function writeReport(dir: string, picks: Choice[], threshold: number) {
     lines.push(
       `## ${t.tab}/${t.slug}: ${t.name}`,
       "",
-      `- Outcome: **${p.outcome}**${p.reason ? ` (${p.reason})` : ""}; ${p.candidates} candidate(s) scored; names a place: ${p.namesPlace}`,
+      `- Outcome: **${p.outcome}**${p.pass ? ` (${p.pass} queries)` : ""}${p.reason ? ` (${p.reason})` : ""}; ${p.candidates} candidate(s) scored`,
     );
+    if (p.parent) lines.push(`- Shares the hero of ${p.parent.tab}/${p.parent.slug}: ${p.heroUrl}`);
     if (p.chosen)
       lines.push(
         `- Pick: ${p.chosen.provider}, score ${p.chosen.score}: [${p.chosen.title}](${p.chosen.sourceUrl})`,
@@ -469,11 +530,11 @@ async function writeReport(dir: string, picks: Choice[], threshold: number) {
     if (p.scores?.length)
       lines.push(
         "",
-        "| # | Provider | Score | Candidate | Note |",
-        "| - | - | - | - | - |",
+        "| Pass | # | Provider | Score | Candidate | Note |",
+        "| - | - | - | - | - | - |",
         ...p.scores.map(
           (s) =>
-            `| ${s.index} | ${s.provider} | ${s.score} | ${s.title.replace(/\|/g, "/").slice(0, 60)} | ${(s.reject_reason ?? s.notes ?? "").replace(/\|/g, "/")} |`,
+            `| ${s.pass} | ${s.index} | ${s.provider} | ${s.score} | ${s.title.replace(/\|/g, "/").slice(0, 60)} | ${(s.reject_reason ?? s.notes ?? "").replace(/\|/g, "/")} |`,
         ),
       );
     lines.push("");

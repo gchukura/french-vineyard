@@ -26,6 +26,8 @@ export type Args = {
   file?: string;
   /** Overrides PIPELINE_BUDGET_USD. */
   budget?: number;
+  /** images: also redo the --only rows that already have a hero. */
+  redo?: boolean;
 };
 
 export const USAGE = `Usage: npm run pipeline -- <command> [n] [options]
@@ -47,6 +49,7 @@ Options:
   --no-redraft       check only: grade, and leave a failing draft in drafted
   --queue-file <f>   use Queue rows from a JSON file instead of the Queue tab
   --only <ids>       comma-separated Queue ids (images: row slugs)
+  --redo             images: also redo the --only rows that already have a hero
   --budget <usd>     spend cap for this run (default PIPELINE_BUDGET_USD)`;
 
 export function parseArgs(argv: string[]): Args {
@@ -69,6 +72,7 @@ export function parseArgs(argv: string[]): Args {
     const arg = rest[i];
     if (arg === "--dry-run") args.dryRun = true;
     else if (arg === "--no-redraft") args.noRedraft = true;
+    else if (arg === "--redo") args.redo = true;
     else if (arg === "--max") args.max = positiveInt(value(i++, arg), arg);
     else if (arg === "--queue-file") args.queueFile = value(i++, arg);
     else if (arg === "--file") args.file = value(i++, arg);
@@ -86,5 +90,8 @@ export function parseArgs(argv: string[]): Args {
   }
   if (args.queueFile && !args.dryRun)
     throw new Error("--queue-file is only allowed with --dry-run");
+  // A typo must not redo every page on the site.
+  if (args.redo && !(args.command === "images" && args.only?.length))
+    throw new Error("--redo needs the images command and --only <slugs>");
   return args;
 }

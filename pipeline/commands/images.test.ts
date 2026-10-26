@@ -2,7 +2,18 @@ import { describe, expect, it } from "vitest";
 
 import type { ImageTarget } from "../lib/images";
 import { SheetStore } from "../sheet";
-import { shareParent } from "./images";
+import { detach, named, shareParent } from "./images";
+
+describe("named", () => {
+  it("matches --only by slug or by Tab/slug", () => {
+    const area = { tab: "SubRegions" as const, slug: "chablis" };
+    const town = { tab: "Towns" as const, slug: "chablis" };
+    expect(named(["chablis"], area) && named(["chablis"], town)).toBe(true);
+    expect(named(["SubRegions/chablis"], area)).toBe(true);
+    expect(named(["SubRegions/chablis"], town)).toBe(false);
+    expect(named(undefined, town)).toBe(false);
+  });
+});
 
 const HERO = [
   "slug",
@@ -84,5 +95,28 @@ describe("shareParent", () => {
     });
     expect(await shareParent({ store }, troyes)).toBeUndefined();
     expect((await store.rows("Towns"))[0].hero_image).toBe("");
+  });
+});
+
+describe("detach", () => {
+  const shared = () =>
+    storeWith({
+      Towns: [{ slug: "troyes", status: "published", hero_image: "https://blob/champagne.webp" }],
+      Images: [
+        { url: "https://blob/champagne.webp", used_on: "/regions/champagne/, /towns/troyes/" },
+      ],
+    });
+
+  it("takes a redone page off the Images line of the hero it had", async () => {
+    const store = shared();
+    await detach({ store }, troyes, "https://blob/troyes.webp");
+    expect((await store.rows("Images"))[0].used_on).toBe("/regions/champagne/");
+  });
+
+  it("leaves the line alone when the hero doesn't change", async () => {
+    const store = shared();
+    await detach({ store }, troyes, "https://blob/champagne.webp");
+    expect((await store.rows("Images"))[0].used_on).toBe("/regions/champagne/, /towns/troyes/");
+    expect(store.writes).toEqual([]);
   });
 });

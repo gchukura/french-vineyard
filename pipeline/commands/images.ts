@@ -16,6 +16,7 @@ import {
   dedupeCandidates,
   departmentFor,
   MAX_CANDIDATES,
+  mixCandidates,
   parseRejects,
   pickBest,
   scoreSchema,
@@ -106,9 +107,11 @@ export async function images(ctx: Context): Promise<Choice[]> {
   const { targets, used } = await collect(ctx);
   for (const url of rejects) used.add(url);
   const todo = targets
-    .filter((t) => !ctx.args.only || ctx.args.only.includes(t.slug))
+    .filter((t) => !ctx.args.only || named(ctx.args.only, t))
     .slice(0, ctx.args.max);
-  ctx.log(`images: ${targets.length} published row(s) without a hero image; doing ${todo.length}`);
+  ctx.log(
+    `images: ${targets.length} published row(s) without a hero image${ctx.args.redo ? " or named for --redo" : ""}; doing ${todo.length}`,
+  );
 
   const outDir = path.join(
     ROOT,
@@ -181,6 +184,13 @@ export async function images(ctx: Context): Promise<Choice[]> {
   return picks;
 }
 
+/**
+ * Whether --only names this row, by slug or as Tab/slug. Tab/slug tells
+ * apart rows that share a slug, such as the Chablis wine area and town.
+ */
+export const named = (only: string[] | undefined, t: Pick<ImageTarget, "tab" | "slug">) =>
+  Boolean(only?.some((o) => o === t.slug || o === `${t.tab}/${t.slug}`));
+
 /** Published place pages and articles with no hero, in tab order, plus images already in use. */
 async function collect(ctx: Context) {
   const site = await ctx.siteRows();
@@ -245,7 +255,10 @@ async function collect(ctx: Context) {
       };
     }),
   ];
-  const targets: ImageTarget[] = all.filter((t) => !t.hero);
+  // --redo also takes rows that already have a hero, but only those named with --only.
+  const targets: ImageTarget[] = all.filter(
+    (t) => !t.hero || (ctx.args.redo && named(ctx.args.only, t)),
+  );
 
   // Images already on the site are not offered again, so pages don't share a photo by accident.
   const used = new Set(
@@ -338,22 +351,27 @@ async function gather(
   queries: readonly string[],
   used: Set<string>,
 ) {
-  let candidates: Candidate[] = [];
+  // Each source is searched on its own, so stock photos get their reserved places.
+  const found: Record<string, Candidate[]> = {};
   for (const [provider, search] of SEARCHES) {
+    let list: Candidate[] = [];
     for (const q of queries) {
-      if (candidates.length >= MAX_CANDIDATES) break;
+      if (list.length >= MAX_CANDIDATES) break;
       try {
-        candidates = dedupeCandidates([...candidates, ...(await search(q))], used);
+        list = dedupeCandidates([...list, ...(await search(q))], used);
       } catch (error) {
         ctx.log(`${target.slug}: ${provider} "${q}" failed: ${(error as Error).message}`);
         break;
       }
     }
+    found[provider] = list;
   }
+  const stock = dedupeCandidates([...found.pixabay, ...found.pexels], used);
+  const candidates = mixCandidates(found.wikimedia, stock);
   // Previews that fail to download are dropped before scoring.
   return (
     await Promise.all(
-      candidates.slice(0, MAX_CANDIDATES).map(async (c) => {
+      candidates.map(async (c) => {
         try {
           return { c, jpeg: await previewJpeg(await fetchBuffer(c.previewUrl)) };
         } catch {
@@ -419,6 +437,7 @@ export async function shareParent(ctx: Pick<Context, "store">, target: ImageTarg
   for (const parent of target.parents) {
     const row = (await ctx.store.rows(parent.tab)).find((r) => r.slug === parent.slug);
     if (!row?.hero_image || row.status?.trim().toLowerCase() !== "published") continue;
+    await detach(ctx, target, row.hero_image);
     await ctx.store.update(target.tab, "slug", target.slug, {
       hero_image: row.hero_image,
       hero_credit: row.hero_credit ?? "",
@@ -445,6 +464,21 @@ export async function shareParent(ctx: Pick<Context, "store">, target: ImageTarg
     return { parent, heroUrl: row.hero_image };
   }
   return undefined;
+}
+
+/**
+ * Before a page (redone with --redo) takes a different hero, removes its path
+ * from the Images line of the hero it had, so /image-credits/ stays accurate.
+ */
+export async function detach(ctx: Pick<Context, "store">, target: ImageTarget, next: string) {
+  const current = (await ctx.store.rows(target.tab)).find(
+    (r) => r.slug === target.slug,
+  )?.hero_image;
+  if (!current || current === next) return;
+  const line = (await ctx.store.rows("Images")).find((i) => i.url === current);
+  if (!line) return;
+  const usedOn = splitList(line.used_on).filter((p) => p !== target.path);
+  await ctx.store.update("Images", "url", current, { used_on: usedOn.join(", ") });
 }
 
 const splitList = (s = "") =>
@@ -487,6 +521,7 @@ async function store(
   const hero = variants.filter((v) => v.ext === "webp").at(-1)!;
   const heroUrl = urls.get(hero)!;
 
+  await detach(ctx, target, heroUrl);
   await ctx.store.update(target.tab, "slug", target.slug, {
     hero_image: heroUrl,
     hero_credit: chosen.credit,

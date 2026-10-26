@@ -41,6 +41,8 @@ export const WIDTHS = [640, 1024, 1600, 2400] as const;
 export const MIN_RATIO = 1.25;
 /** Candidates scored per row. */
 export const MAX_CANDIDATES = 8;
+/** Places among them kept for stock sources (Pixabay, Pexels) when they have results. */
+export const STOCK_SLOTS = 3;
 /** Commons originals above this are skipped rather than downloaded. */
 export const MAX_DOWNLOAD_BYTES = 50_000_000;
 
@@ -339,6 +341,24 @@ export function dedupeCandidates(candidates: Candidate[], used: Set<string>): Ca
     keys.forEach((k) => seen.add(k));
     return true;
   });
+}
+
+/**
+ * The candidates one pass scores: up to `reserve` stock photos (Pixabay,
+ * Pexels) are always included, Commons fills the rest, and further stock
+ * photos fill any places Commons leaves empty. Commons comes first, so it
+ * wins ties.
+ */
+export function mixCandidates(
+  commons: Candidate[],
+  stock: Candidate[],
+  max = MAX_CANDIDATES,
+  reserve = STOCK_SLOTS,
+): Candidate[] {
+  const kept = stock.slice(0, reserve);
+  const fromCommons = commons.slice(0, max - kept.length);
+  const extra = stock.slice(kept.length, kept.length + max - kept.length - fromCommons.length);
+  return [...fromCommons, ...kept, ...extra];
 }
 
 // ---------------------------------------------------------------------------

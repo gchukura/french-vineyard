@@ -12,6 +12,7 @@ import {
   parseCommons,
   parsePexels,
   parsePixabay,
+  mixCandidates,
   parseRejects,
   pickBest,
   searchQueries,
@@ -261,6 +262,24 @@ describe("dedupeCandidates", () => {
       new Set(["used"]),
     );
     expect(out.map((x) => x.id)).toEqual(["a", "c"]);
+  });
+});
+
+describe("mixCandidates", () => {
+  const base = parseCommons({ query: { pages: [commonsPage()] } })[0];
+  const make = (prefix: string, n: number) =>
+    Array.from({ length: n }, (_, i) => ({ ...base, id: `${prefix}${i}` }));
+  const ids = (xs: { id: string }[]) => xs.map((x) => x.id).join(" ");
+
+  it("keeps three places for stock photos and gives Commons the rest, first", () => {
+    expect(ids(mixCandidates(make("c", 10), make("s", 10)))).toBe("c0 c1 c2 c3 c4 s0 s1 s2");
+  });
+
+  it("lets either side fill places the other leaves empty", () => {
+    expect(ids(mixCandidates(make("c", 2), make("s", 10)))).toBe("c0 c1 s0 s1 s2 s3 s4 s5");
+    expect(ids(mixCandidates(make("c", 10), make("s", 1)))).toBe("c0 c1 c2 c3 c4 c5 c6 s0");
+    expect(ids(mixCandidates(make("c", 10), []))).toBe("c0 c1 c2 c3 c4 c5 c6 c7");
+    expect(mixCandidates([], [])).toEqual([]);
   });
 });
 

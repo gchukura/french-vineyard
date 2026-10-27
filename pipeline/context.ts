@@ -72,6 +72,7 @@ export const ESTIMATE_USD = {
   draft: 0.25,
   check: 0.08, // per pass; two run per draft
   imageScore: 0.06, // up to eight 768 px previews
+  tourNotes: 0.12, // up to three web searches and a short reply
 };
 
 export async function loadContentFiles(): Promise<ContentFiles> {
@@ -212,7 +213,9 @@ export class Context {
         this.store.parsed("SubRegions", subRegionSchema, all),
         this.store.parsed("Towns", townSchema, all),
         this.store.parsed("Articles", articleSchema, all),
-        this.store.parsed("Tours", tourSchema, all),
+        // Published only: tours:import adds draft rows the owner hasn't filled in
+        // yet (no title), and briefs and checks only ever use published tours.
+        this.store.parsed("Tours", tourSchema),
         this.store.parsed("Hotels", hotelSchema),
       ]);
       this.site = { regions, subregions, towns, articles, tours, hotels };

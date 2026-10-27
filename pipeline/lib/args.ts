@@ -8,6 +8,10 @@ export const COMMANDS = [
   "run",
   "seed",
   "images",
+  "tours:import",
+  "tours:check",
+  "tours:describe",
+  "tours:queue",
 ] as const;
 export type Command = (typeof COMMANDS)[number];
 
@@ -44,6 +48,10 @@ Commands:
   run             research, draft, check and publish in sequence
   seed --file <f> append Queue rows from a JSON array (skips existing ids)
   images <n>      hero images for up to n published rows with no hero_image
+  tours:import    turn URLs pasted into Tours_Inbox into draft Tours rows (no page fetching)
+  tours:check     follow each published tour's /go/ link; set last_checked or link_flag
+  tours:describe  write best_for and why_picked for published tours missing them
+  tours:queue     queue a ranked_list page per region + category with 3+ published tours
 
 Options:
   --max <n>          same as the positional n (default 10)

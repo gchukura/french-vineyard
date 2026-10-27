@@ -67,8 +67,10 @@ export async function GET(request: Request, { params }: RouteContext<"/go/[provi
     }
   }
 
-  // Fire-and-forget: the log runs after the redirect has been sent.
-  after(() => logClick(buildClick({ provider, id, page, slot })));
+  // Fire-and-forget: the log runs after the redirect has been sent. The weekly
+  // link check (npm run tours:check) marks itself so it isn't counted as a click.
+  if (request.headers.get("x-link-check") !== "1")
+    after(() => logClick(buildClick({ provider, id, page, slot })));
 
   return new Response(null, { status: 302, headers: { ...headers, location } });
 }

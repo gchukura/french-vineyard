@@ -26,6 +26,8 @@ export const PIPELINE_TABS: Record<string, string[]> = {
   Queries: QUERIES_HEADERS,
   // The owner pastes tour URLs here; tours:import reads them.
   Tours_Inbox: ["url", "added_at", "processed", "note"],
+  // The owner pastes hotel links here; hotels:import reads them.
+  Hotels_Inbox: ["url", "added_at", "processed", "note"],
 };
 
 /** Google Sheets rejects cells over 50,000 characters. */

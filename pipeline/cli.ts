@@ -4,6 +4,7 @@ import path from "node:path";
 
 import { check } from "./commands/check";
 import { draft } from "./commands/draft";
+import { hotelsEnrich, hotelsImport, hotelsQueue } from "./commands/hotels";
 import { images } from "./commands/images";
 import { toursCheck, toursDescribe, toursImport, toursQueue } from "./commands/tours";
 import { toursEnrich } from "./commands/tours-enrich";
@@ -74,6 +75,18 @@ async function main() {
         break;
       case "tours:enrich":
         await toursEnrich(ctx);
+        break;
+      case "hotels:import":
+        // The whole flow: the owner only pastes links.
+        await hotelsImport(ctx);
+        await hotelsEnrich(ctx);
+        await hotelsQueue(ctx);
+        break;
+      case "hotels:enrich":
+        await hotelsEnrich(ctx);
+        break;
+      case "hotels:queue":
+        await hotelsQueue(ctx);
         break;
       case "tours:check":
         await toursCheck(ctx);

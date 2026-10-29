@@ -117,6 +117,35 @@ describe("expediaUrl", () => {
   });
 });
 
+describe("Stay22", () => {
+  const stay22 = { ...env, STAY22_AID: "frenchvineyard" };
+
+  it("wraps the Booking.com hotel page in an Allez link, ahead of BOOKING_AID", () => {
+    const url = bookingUrl("https://www.booking.com/hotel/fr/royal-champagne.html", stay22, ref);
+    expect(url.startsWith("https://www.stay22.com/allez/booking?")).toBe(true);
+    const p = params(url);
+    expect(p).toMatchObject({ aid: "frenchvineyard", campaign: "regions_champagne" });
+    const hotel = new URL(p.link!);
+    expect(hotel.pathname).toBe("/hotel/fr/royal-champagne.html");
+    expect(hotel.searchParams.get("aid")).toBeNull();
+    expect(hotel.searchParams.get("utm_campaign")).toBe("regions-champagne");
+  });
+
+  it("wraps the Expedia hotel page too, ahead of Partnerize", () => {
+    const url = expediaUrl("https://www.expedia.com/h123456.Hotel-Information", stay22, ref);
+    expect(url.startsWith("https://www.stay22.com/allez/expedia?")).toBe(true);
+    expect(new URL(params(url).link!).pathname).toBe("/h123456.Hotel-Information");
+  });
+
+  it("still refuses a hotel page on another host", () => {
+    expect(() => bookingUrl("https://evil.example/hotel", stay22, ref)).toThrow(AffiliateError);
+  });
+
+  it("is read from the environment", () => {
+    expect(affiliateEnv({ STAY22_AID: "x" }).STAY22_AID).toBe("x");
+  });
+});
+
 describe("checkTarget", () => {
   it("refuses other hosts and plain http", () => {
     expect(() => checkTarget("gyg", "https://evil.example/")).toThrow(AffiliateError);

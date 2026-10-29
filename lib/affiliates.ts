@@ -5,9 +5,14 @@ import type { AffiliateProvider } from "@/lib/links";
  * utm_source=frenchvineyard and the referring page slug, plus each network's
  * own sub-id parameter so the page shows up in partner dashboards too.
  *
+ * Hotels: with STAY22_AID, Booking.com and Expedia links go through Stay22
+ * Allez; otherwise Booking.com uses BOOKING_AID or Travelpayouts, and Expedia
+ * uses Partnerize (EXPEDIA_CAMREF).
+ *
  * Formats to re-check against a link generated in each dashboard before
  * launch: Travelpayouts (needs TRAVELPAYOUTS_TRS and
- * TRAVELPAYOUTS_BOOKING_PROGRAM) and Winalist (referral parameter name).
+ * TRAVELPAYOUTS_BOOKING_PROGRAM), Winalist (referral parameter name) and
+ * Stay22 (the Allez link from its dashboard).
  */
 
 export type AffiliateEnv = {
@@ -19,6 +24,7 @@ export type AffiliateEnv = {
   TRAVELPAYOUTS_BOOKING_PROGRAM?: string;
   EXPEDIA_CAMREF?: string;
   WINALIST_REF?: string;
+  STAY22_AID?: string;
 };
 
 export type Referral = {
@@ -110,11 +116,30 @@ export function winalistUrl(target: string, env: AffiliateEnv, { page }: Referra
   return withUtm(url, code).toString();
 }
 
-/** Booking.com direct (BOOKING_AID) or wrapped by Travelpayouts (TRAVELPAYOUTS_MARKER). */
+/**
+ * Stay22 Allez for one hotel: the hotel's own Booking.com or Expedia page,
+ * URL-encoded in `link`. Stay22 reports split campaign values on "-", so the
+ * page code uses "_" there.
+ */
+export function stay22Url(
+  provider: "booking" | "expedia",
+  hotelPage: URL,
+  aid: string,
+  code: string,
+): string {
+  const url = new URL(`https://www.stay22.com/allez/${provider}`);
+  url.searchParams.set("aid", aid);
+  url.searchParams.set("link", hotelPage.toString());
+  url.searchParams.set("campaign", code.replace(/-/g, "_"));
+  return url.toString();
+}
+
+/** Stay22 (STAY22_AID), Booking.com direct (BOOKING_AID) or Travelpayouts (TRAVELPAYOUTS_MARKER). */
 export function bookingUrl(target: string, env: AffiliateEnv, { page }: Referral): string {
   const url = checkTarget("booking", target);
   const code = campaignCode(page);
   withUtm(url, code);
+  if (env.STAY22_AID?.trim()) return stay22Url("booking", url, env.STAY22_AID.trim(), code);
   if (env.BOOKING_AID?.trim()) {
     url.searchParams.set("aid", env.BOOKING_AID.trim());
     url.searchParams.set("label", code);
@@ -129,10 +154,12 @@ export function bookingUrl(target: string, env: AffiliateEnv, { page }: Referral
   return tp.toString();
 }
 
-/** Expedia via Partnerize: camref, then pubref, then the encoded destination, in that order. */
+/** Expedia via Stay22 (STAY22_AID), or Partnerize: camref, then pubref, then the encoded destination. */
 export function expediaUrl(target: string, env: AffiliateEnv, { page }: Referral): string {
   const url = checkTarget("expedia", target);
   const code = campaignCode(page);
+  if (env.STAY22_AID?.trim())
+    return stay22Url("expedia", withUtm(url, code), env.STAY22_AID.trim(), code);
   const camref = encodeURIComponent(need(env, "EXPEDIA_CAMREF"));
   const destination = encodeURIComponent(withUtm(url, code).toString());
   return `https://prf.hn/click/camref:${camref}/pubref:${code}/destination:${destination}`;
@@ -194,5 +221,6 @@ export function affiliateEnv(
     TRAVELPAYOUTS_BOOKING_PROGRAM: source.TRAVELPAYOUTS_BOOKING_PROGRAM,
     EXPEDIA_CAMREF: source.EXPEDIA_CAMREF,
     WINALIST_REF: source.WINALIST_REF,
+    STAY22_AID: source.STAY22_AID,
   };
 }

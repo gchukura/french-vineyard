@@ -199,39 +199,68 @@ export function sentenceCount(text: string): number {
     .filter((s) => s.trim()).length;
 }
 
-/**
- * The deterministic rules for best_for and why_picked: lengths, two or three
- * sentences, and the page checks that apply to a short blurb (banned
- * phrases, no first person at all, no wine selling, no meta-language,
- * American English, 12-hour times, € with $, no raw provider links, and
- * every number from the tour's own data or a quoted source).
- */
+export type CheckOptions = {
+  bannedPhrases: string[];
+  allowedNumbers: Set<string>;
+  usdRate: number;
+};
+
+/** best_for and why_picked: why_picked is two or three sentences, at most 300 characters. */
 export function checkTourNotes(
   notes: Pick<TourNotes, "best_for" | "why_picked">,
-  opts: { bannedPhrases: string[]; allowedNumbers: Set<string>; usdRate: number },
+  opts: CheckOptions,
+): Finding[] {
+  return checkShortCopy(
+    { best_for: notes.best_for, text: notes.why_picked },
+    { field: "why_picked", sentences: [2, 3], maxChars: WHY_PICKED_MAX, subject: "tour" },
+    opts,
+  );
+}
+
+/**
+ * The deterministic rules for a card's short copy (best_for plus a short
+ * text: a tour's why_picked, a hotel's blurb): lengths, sentence count, and
+ * the page checks that apply to a blurb (banned phrases, no first person at
+ * all, no wine selling, no meta-language, American English, 12-hour times,
+ * € with $, no raw provider links, and every number from the item's own
+ * data or a quoted source).
+ */
+export function checkShortCopy(
+  copy: { best_for: string; text: string },
+  rules: { field: string; sentences: [number, number]; maxChars: number; subject: string },
+  opts: CheckOptions,
 ): Finding[] {
   const findings: Finding[] = [];
   const err = (rule: string, quote: string, fix: string) =>
     findings.push({ rule, severity: "error", quote: quote.slice(0, 200), fix });
-  const best = notes.best_for.trim();
-  const why = notes.why_picked.trim();
-  const both = `${best}\n${why}`;
+  const best = copy.best_for.trim();
+  const text = copy.text.trim();
+  const both = `${best}\n${text}`;
+  const [min, max] = rules.sentences;
 
   if (!best) err("best_for", "(empty)", "Write best_for.");
   if (best.length > BEST_FOR_MAX)
     err("best_for", best, `best_for is ${best.length} characters; the limit is ${BEST_FOR_MAX}.`);
-  if (why.length > WHY_PICKED_MAX)
+  if (text.length > rules.maxChars)
     err(
-      "why_picked",
-      `${why.length} characters`,
-      `why_picked must be at most ${WHY_PICKED_MAX} characters.`,
+      rules.field,
+      `${text.length} characters`,
+      `${rules.field} must be at most ${rules.maxChars} characters.`,
     );
-  const sentences = sentenceCount(why);
-  if (sentences < 2 || sentences > 3)
-    err("why_picked", `${sentences} sentence(s)`, "why_picked must be two or three sentences.");
+  const sentences = sentenceCount(text);
+  if (sentences < min || sentences > max)
+    err(
+      rules.field,
+      `${sentences} sentence(s)`,
+      `${rules.field} must be ${min === max ? min : `${min} to ${max}`} sentence(s).`,
+    );
 
   for (const n of unmatchedNumbers(both, opts.allowedNumbers, { usdRate: opts.usdRate }))
-    err("numbers_sourced", n.context, `${n.number} is not in the tour's data or a cited source.`);
+    err(
+      "numbers_sourced",
+      n.context,
+      `${n.number} is not in the ${rules.subject}'s data or a cited source.`,
+    );
   for (const hit of bannedPhraseHits(both, opts.bannedPhrases))
     err("no_banned_phrases", hit.quote, `Rewrite without "${hit.phrase}".`);
   for (const re of [FIRST_PERSON, FIRST_PERSON_PLURAL]) {

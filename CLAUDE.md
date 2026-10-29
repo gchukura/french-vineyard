@@ -9,7 +9,7 @@ Colours: chalk #F7F3EC (background), parchment #EFE8DB (surfaces), cellar #2B232
 
 ## Rules
 - Every affiliate link goes through /go/[provider]/[id] and carries rel="sponsored nofollow".
-- Tour cards come only from the owner-curated Tours tab; never add or choose tours automatically.
+- Tours come only from links the owner pastes into Tours_Inbox (or rows the owner adds to the Tours tab); the code never finds, adds or chooses a tour on its own. `tours:import` fills those tours in from the provider's API and publishes the ones that meet content/selection-rules.md; the rest stay drafts with the reason in notes_flag.
 - No tracking script loads before consent. Refuse is as easy as Accept.
 - No images of people drinking, glasses raised or parties. No copy that sells wine.
 - Never generate a photorealistic image of a real, named place.

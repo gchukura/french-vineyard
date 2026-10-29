@@ -1,6 +1,6 @@
 # How we rank tours
 
-This file is the source for the "How we ranked these" box on ranked-list pages. The drafting step summarizes it; it does not choose or rank tours. Every tour on the site is picked and ordered by hand by the site's editor in the Tours tab. **Editor: keep this file true to how you actually choose. Readers see a summary of it.**
+This file is the source for the "How we ranked these" box on ranked-list pages. The drafting step summarizes it; it does not choose or rank tours. Every tour on the site is picked by hand by the site's editor, and it only goes live once it meets the rules below, checked against the booking site's own data (rating, reviews, cancellation terms, guide language, meeting point, group size). **Editor: keep this file true to how you actually choose. Readers see a summary of it.**
 
 ## What a tour needs to be considered
 
@@ -19,6 +19,8 @@ This file is the source for the "How we ranked these" box on ranked-list pages. 
 2. **What's included.** Transport from the meeting point, the number of estates visited and whether tastings are included in the price.
 3. **Ratings and review volume**, as shown on the provider's page on the date in the tour's `last_checked`.
 4. **Price for what you get.** Lower price breaks ties; it never lifts a weaker tour above a stronger one.
+
+The editor sets the order. A newly added tour joins the end of its list until the editor moves it.
 
 ## What doesn't affect the order
 

@@ -6,6 +6,7 @@ import { check } from "./commands/check";
 import { draft } from "./commands/draft";
 import { images } from "./commands/images";
 import { toursCheck, toursDescribe, toursImport, toursQueue } from "./commands/tours";
+import { toursEnrich } from "./commands/tours-enrich";
 import { init } from "./commands/init";
 import { publish } from "./commands/publish";
 import { refresh } from "./commands/refresh";
@@ -65,7 +66,14 @@ async function main() {
         await images(ctx);
         break;
       case "tours:import":
+        // The whole flow: the owner only pastes links. Import, fill in and publish
+        // the tours that meet the selection rules, write their notes, queue ranked lists.
         await toursImport(ctx);
+        if (await toursEnrich(ctx)) await toursDescribe(ctx);
+        await toursQueue(ctx);
+        break;
+      case "tours:enrich":
+        await toursEnrich(ctx);
         break;
       case "tours:check":
         await toursCheck(ctx);

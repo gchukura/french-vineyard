@@ -3,7 +3,9 @@ import "server-only";
 import { latestDate } from "@/lib/content";
 import { areasIn, getSiteData, townsIn, type SiteData } from "@/lib/data";
 import type { SitemapEntry } from "@/lib/sitemap";
+import { gettingThereGroups } from "@/lib/getting-there";
 import {
+  GETTING_THERE_HREF,
   LEGAL_LINKS,
   PLAN_INDEX_HREF,
   REGIONS_INDEX_HREF,
@@ -50,6 +52,14 @@ function entries(d: SiteData, type: SitemapType): SitemapEntry[] {
           path: PLAN_INDEX_HREF,
           lastmod: latestDate(
             d.articles.filter((a) => a.page_type === "practical").map((a) => a.updated_at),
+          ),
+        },
+        {
+          path: GETTING_THERE_HREF,
+          lastmod: latestDate(
+            gettingThereGroups(d.regions, d.articles).flatMap((g) =>
+              g.articles.map((a) => a.updated_at),
+            ),
           ),
         },
         ...LEGAL_LINKS.map((l) => ({ path: l.href })),

@@ -21,6 +21,7 @@ import {
   type Tour,
   type Town,
 } from "@/lib/sheets";
+import { STATIC_PATHS } from "@/lib/route-guard";
 import { articleHref, RESERVED_ROOT_SLUGS } from "@/lib/site";
 
 /**
@@ -58,9 +59,12 @@ export async function getSiteData(): Promise<SiteData> {
     // Children of unpublished regions stay hidden.
     subRegions: subRegions.filter((s) => regionSlugs.has(s.region_slug)),
     towns: towns.filter((t) => regionSlugs.has(t.region_slug)),
-    // A root-level article can't take a slug a route already owns ("tours").
+    // A root-level article can't take a slug a route already owns ("tours"), and
+    // no article can take a fixed page's URL (a practical "getting-there").
     articles: articles.filter(
-      (a) => articleHref(a).split("/").length > 3 || !RESERVED_ROOT_SLUGS.has(a.slug),
+      (a) =>
+        (articleHref(a).split("/").length > 3 || !RESERVED_ROOT_SLUGS.has(a.slug)) &&
+        !STATIC_PATHS.has(articleHref(a)),
     ),
     hotels,
     tours: byRank(tours),

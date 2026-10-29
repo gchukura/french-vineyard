@@ -11,7 +11,7 @@ describe("isContentPath", () => {
       "/towns/reims/",
       "/tours/burgundy/",
       "/where-to-stay/where-to-stay-in-reims/",
-      "/plan/getting-there/",
+      "/plan/paris-to-reims-by-train/",
       "/towns/",
     ]) {
       expect(isContentPath(p), p).toBe(true);
@@ -25,6 +25,8 @@ describe("isContentPath", () => {
       "/tours/",
       "/where-to-stay/",
       "/plan/",
+      // The getting-there hub is a fixed page, not a practical article.
+      "/plan/getting-there/",
       "/about/",
       "/styleguide/",
       "/og-default.jpg",

@@ -24,6 +24,7 @@ import {
   type TourProvider,
 } from "../lib/tours";
 import { isAccountLimit } from "./images";
+import { GygNotFound, gygApi } from "./tours-enrich";
 import { revalidate } from "./publish";
 
 /**
@@ -229,16 +230,13 @@ type GygResult =
 async function gygRefresh(providerId: string, key: string): Promise<GygResult> {
   if (!/^\d+$/.test(providerId))
     return { status: "flag", reason: `provider_id "${providerId}" is not a GetYourGuide tour id` };
-  const res = await fetch(
-    `https://api.getyourguide.com/1/tours/${providerId}?cnt_language=en&currency=EUR`,
-    {
-      headers: { "X-ACCESS-TOKEN": key, accept: "application/json" },
-      signal: AbortSignal.timeout(20_000),
-    },
-  );
-  if (res.status === 404) return { status: "flag", reason: "GetYourGuide API: tour not found" };
-  if (!res.ok) throw new Error(`GetYourGuide API answered HTTP ${res.status}`);
-  return { status: "ok", facts: parseGygTour(await res.json()) };
+  try {
+    return { status: "ok", facts: parseGygTour(await gygApi(`/1/tours/${providerId}`, key)) };
+  } catch (error) {
+    if (error instanceof GygNotFound)
+      return { status: "flag", reason: "GetYourGuide API: tour not found" };
+    throw error;
+  }
 }
 
 // ---------------------------------------------------------------------------

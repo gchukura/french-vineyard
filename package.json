@@ -18,7 +18,8 @@
     "tours:import": "tsx pipeline/cli.ts tours:import",
     "tours:check": "tsx pipeline/cli.ts tours:check",
     "tours:describe": "tsx pipeline/cli.ts tours:describe",
-    "tours:queue": "tsx pipeline/cli.ts tours:queue"
+    "tours:queue": "tsx pipeline/cli.ts tours:queue",
+    "tours:enrich": "tsx pipeline/cli.ts tours:enrich"
   },
   "dependencies": {
     "google-auth-library": "^11.3.1",

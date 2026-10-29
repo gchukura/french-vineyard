@@ -30,6 +30,21 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      # Links the owner pasted into Tours_Inbox: import them, fill them in from the
+      # GetYourGuide API, publish those that meet the selection rules, write their
+      # notes and queue ranked lists.
+      - run: npm run pipeline -- tours:import --max 50
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GYG_API_KEY: ${{ secrets.GYG_API_KEY }}
+          PIPELINE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.PIPELINE_SERVICE_ACCOUNT_EMAIL }}
+          PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY }}
+          PIPELINE_SHEET_ID: ${{ secrets.PIPELINE_SHEET_ID }}
+          PIPELINE_BUDGET_USD: ${{ vars.PIPELINE_BUDGET_USD || '25' }}
+          PIPELINE_MODEL: ${{ vars.PIPELINE_MODEL }}
+          PIPELINE_EUR_USD_RATE: ${{ vars.PIPELINE_EUR_USD_RATE }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://frenchvineyard.com' }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
       # The owner's tours: follow every published tour's /go/ link and record
       # last_checked or a link_flag (with GYG_API_KEY, GetYourGuide tours are
       # refreshed from the Partner API instead).

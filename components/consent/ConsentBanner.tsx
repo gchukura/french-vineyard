@@ -32,8 +32,8 @@ export function ConsentBannerView({
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-6 sm:px-6">
         <p className="text-sm sm:flex-1">
-          We&rsquo;d like to count visits with Plausible, a privacy-friendly analytics tool. It sets
-          no cookies and only runs if you accept.{" "}
+          We&rsquo;d like to count visits with Plausible and Vercel Web Analytics, privacy-friendly
+          analytics tools. They set no cookies and only run if you accept.{" "}
           {/* Shown on every first visit, so don't prefetch it on every page view. */}
           <Link href="/privacy-policy/" prefetch={false} className="underline underline-offset-2">
             Privacy policy

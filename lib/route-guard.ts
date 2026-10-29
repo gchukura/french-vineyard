@@ -12,6 +12,7 @@ export const STATIC_PATHS = new Set([
   "/tours/",
   "/where-to-stay/",
   "/plan/",
+  "/plan/getting-there/",
   "/about/",
   "/contact/",
   "/privacy-policy/",

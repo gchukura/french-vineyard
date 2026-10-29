@@ -18,12 +18,13 @@ export const REGIONS_INDEX_HREF = "/regions/";
 export const TOURS_INDEX_HREF = "/tours/";
 export const STAY_INDEX_HREF = "/where-to-stay/";
 export const PLAN_INDEX_HREF = "/plan/";
+export const GETTING_THERE_HREF = "/plan/getting-there/";
 
 export const NAV: NavItem[] = [
   { label: "Tours & Tastings", href: TOURS_INDEX_HREF },
   { label: "Where to Stay", href: STAY_INDEX_HREF },
   { label: "Plan Your Trip", href: PLAN_INDEX_HREF },
-  { label: "Getting There", href: "/plan/getting-there/" },
+  { label: "Getting There", href: GETTING_THERE_HREF },
 ];
 
 export const LEGAL_LINKS: NavItem[] = [

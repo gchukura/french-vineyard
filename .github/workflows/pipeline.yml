@@ -30,13 +30,15 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      # Links the owner pasted into Tours_Inbox: import them, fill them in from the
-      # GetYourGuide API, publish those that meet the selection rules, write their
-      # notes and queue ranked lists.
+      # Links the owner pasted into Tours_Inbox: import them, fill them in (GetYourGuide
+      # and Viator APIs; Winalist pages when WINALIST_READ_PAGES=1), publish those that
+      # meet the selection rules, write their notes and queue ranked lists.
       - run: npm run pipeline -- tours:import --max 50
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GYG_API_KEY: ${{ secrets.GYG_API_KEY }}
+          VIATOR_API_KEY: ${{ secrets.VIATOR_API_KEY }}
+          WINALIST_READ_PAGES: ${{ vars.WINALIST_READ_PAGES }}
           PIPELINE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.PIPELINE_SERVICE_ACCOUNT_EMAIL }}
           PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY }}
           PIPELINE_SHEET_ID: ${{ secrets.PIPELINE_SHEET_ID }}

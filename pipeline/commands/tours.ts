@@ -24,7 +24,7 @@ import {
   type TourProvider,
 } from "../lib/tours";
 import { isAccountLimit } from "./images";
-import { GygNotFound, gygApi } from "./tours-enrich";
+import { TourNotFound, gygApi } from "./tours-enrich";
 import { revalidate } from "./publish";
 
 /**
@@ -233,7 +233,7 @@ async function gygRefresh(providerId: string, key: string): Promise<GygResult> {
   try {
     return { status: "ok", facts: parseGygTour(await gygApi(`/1/tours/${providerId}`, key)) };
   } catch (error) {
-    if (error instanceof GygNotFound)
+    if (error instanceof TourNotFound)
       return { status: "flag", reason: "GetYourGuide API: tour not found" };
     throw error;
   }

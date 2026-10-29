@@ -192,3 +192,127 @@ describe("tours:enrich", () => {
     );
   });
 });
+
+describe("tours:enrich for Viator and Winalist", () => {
+  const viatorProduct = {
+    status: "ACTIVE",
+    productCode: "35428P1",
+    title: "Champagne Day Trip from Paris with Tastings",
+    description: "Small-group minivan tour to three champagne houses.",
+    reviews: { combinedAverageRating: 4.8, totalReviews: 1312 },
+    cancellationPolicy: { type: "STANDARD" },
+    languageGuides: [{ type: "GUIDE", language: "en" }],
+    logistics: { start: [{ description: "Eiffel Tower bus stop" }] },
+    itinerary: { maxTravelersInSharedTour: 8, duration: { fixedDurationInMinutes: 660 } },
+    destinations: [{ ref: "5049" }],
+  };
+  const winalistHtml = `<script type="application/ld+json">${JSON.stringify({
+    "@graph": [
+      {
+        "@type": "Winery",
+        name: "Champagne G.H. Martel & C°",
+        makesOffer: [
+          {
+            name: "Prestige Tour and Tasting",
+            description: "Guided tour of the cellars and a tasting.",
+            price: "30.00",
+            priceCurrency: "EUR",
+            itemOffered: {
+              url: "https://www.winalist.com/experiences/693/prestige-tour-and-tasting",
+              duration: "PT1H15M",
+              maximumAttendeeCapacity: 4,
+            },
+          },
+        ],
+        address: { streetAddress: "Rue des Créneaux, Reims", addressLocality: "Reims" },
+        aggregateRating: { ratingValue: "4.7", reviewCount: "4860" },
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: [
+          { acceptedAnswer: { text: "You can cancel free of charge up to 24 hours before." } },
+        ],
+      },
+    ],
+  })}</script><p>Preferred language: French English</p><p>Suggest up to 3 time slots</p>`;
+
+  function fetchFor(url: string) {
+    if (url.endsWith("/destinations"))
+      return Response.json({
+        destinations: [{ destinationId: 5049, name: "Reims" }],
+        totalCount: 1,
+      });
+    if (url.includes("/products/35428P1")) return Response.json(viatorProduct);
+    if (url.includes("/availability/schedules/35428P1"))
+      return Response.json({ currency: "EUR", summary: { fromPrice: 189 } });
+    if (url.includes("winalist.com")) return new Response(winalistHtml, { status: 200 });
+    return new Response("{}", { status: 404 });
+  }
+
+  beforeEach(() => {
+    vi.stubEnv("VIATOR_API_KEY", "test-key");
+    vi.stubEnv("WINALIST_READ_PAGES", "1");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string | URL) => fetchFor(String(url))),
+    );
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  it("fills in and publishes a Viator product and a Winalist experience", async () => {
+    const { ctx, store } = ctxWith([
+      { id: "viator-35428p1", provider: "viator", provider_id: "35428P1", status: "draft" },
+      {
+        id: "winalist-693",
+        provider: "winalist",
+        provider_id: "693",
+        provider_url: "https://www.winalist.com/experiences/693/prestige-tour-and-tasting",
+        status: "draft",
+      },
+    ]);
+    expect(await toursEnrich(ctx)).toBe(2);
+    const [viator, winalist] = await store.rows("Tours");
+    expect(viator).toMatchObject({
+      title: "Champagne Day Trip from Paris with Tastings",
+      price_from_eur: "189",
+      duration: "11 hours",
+      rating: "4.8",
+      review_count: "1312",
+      region_slug: "champagne",
+      town_slug: "reims",
+      category: "Day trips from Paris",
+      rank: "1",
+      status: "published",
+    });
+    expect(winalist).toMatchObject({
+      title: "Champagne G.H. Martel & C°: Prestige Tour and Tasting",
+      price_from_eur: "30",
+      duration: "1 hour 15 minutes",
+      category: "Cellar tours",
+      rank: "1",
+      status: "published",
+    });
+  });
+
+  it("asks for one experience when a Winalist estate page was pasted, and waits when page reading is off", async () => {
+    const host = {
+      id: "winalist-host-303",
+      provider: "winalist",
+      provider_id: "host-303",
+      status: "draft",
+    };
+    const { ctx, store } = ctxWith([host]);
+    expect(await toursEnrich(ctx)).toBe(0);
+    expect((await store.rows("Tours"))[0].notes_flag).toMatch(
+      /^auto: this is a Winalist estate page; paste the link of one experience/,
+    );
+
+    vi.stubEnv("WINALIST_READ_PAGES", "");
+    const off = ctxWith([{ ...host, provider_id: "693" }]);
+    expect(await toursEnrich(off.ctx)).toBe(0);
+    expect((await off.store.rows("Tours"))[0]).toMatchObject({ status: "draft", notes_flag: "" });
+  });
+});

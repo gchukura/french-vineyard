@@ -36,8 +36,11 @@ export type TourFacts = {
   locations: { name: string; city?: string; lat?: number; lng?: number }[];
   lat?: number;
   lng?: number;
-  /** From the options call: where to meet, or the pickup description. */
+  /** Where to meet, or the pickup description. */
   meetingPoint?: string;
+  /** Group size when the provider states it in a field (Viator, Winalist). */
+  groupMax?: number;
+  privateTour?: boolean;
 };
 
 const coords = z.object({ lat: z.number(), long: z.number() }).nullish();
@@ -138,21 +141,23 @@ export function meetingPointFrom(json: unknown): string | undefined {
   return undefined;
 }
 
-/** "4 hours", "3–4 hours", "90 minutes", "1 day" from the API's durations. */
+/** "4 hours", "1 hour 15 minutes", "45 minutes", "3–4 hours", "75–90 minutes", "1 day". */
 export function formatDuration(durations: TourFacts["durations"]): string | undefined {
   if (!durations.length) return undefined;
-  const hours = (d: TourFacts["durations"][number]) =>
-    d.unit === "day" ? d.duration * 24 : d.unit === "minute" ? d.duration / 60 : d.duration;
-  const values = durations.map(hours).sort((a, b) => a - b);
+  const minutes = (d: TourFacts["durations"][number]) =>
+    Math.round(
+      d.unit === "day" ? d.duration * 1440 : d.unit === "hour" ? d.duration * 60 : d.duration,
+    );
+  const values = durations.map(minutes).sort((a, b) => a - b);
   const [lo, hi] = [values[0], values[values.length - 1]];
-  const fmt = (n: number) => String(Math.round(n * 10) / 10);
-  if (hi >= 24 && lo >= 24) {
-    const days = Math.round(lo / 24);
-    return `${days} ${days === 1 ? "day" : "days"}`;
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  if (lo >= 1440) return plural(Math.round(lo / 1440), "day");
+  if (lo === hi) {
+    const [h, m] = [Math.floor(lo / 60), lo % 60];
+    if (!h) return plural(m, "minute");
+    return m ? `${plural(h, "hour")} ${plural(m, "minute")}` : plural(h, "hour");
   }
-  if (hi < 1) return `${Math.round(lo * 60)} minutes`;
-  if (lo === hi) return `${fmt(lo)} ${lo === 1 ? "hour" : "hours"}`;
-  return `${fmt(lo)}–${fmt(hi)} hours`;
+  return lo % 60 === 0 && hi % 60 === 0 ? `${lo / 60}–${hi / 60} hours` : `${lo}–${hi} minutes`;
 }
 
 /** Accent- and case-insensitive words: "Épernay" -> " epernay ". */
@@ -313,7 +318,8 @@ export function selectionProblems(
   const guided = !["self_guided", "audio_guide", "none"].includes(facts.guideType ?? "");
   if (!facts.languages.includes("en") || !guided) problems.push("no English-speaking guide");
   if (!facts.hasPickUp && !facts.meetingPoint) problems.push("no meeting point or pickup given");
-  if (!groupSizeIn(text)) problems.push("group size not stated in the listing");
+  if (facts.groupMax == null && !facts.privateTour && !groupSizeIn(text))
+    problems.push("group size not stated in the listing");
   if (!VISITS_WINE.test(text))
     problems.push("doesn't mention visiting an estate, cellar or vineyard");
   if (facts.priceEur == null) problems.push("no price");

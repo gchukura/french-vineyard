@@ -129,7 +129,14 @@ describe("formatDuration", () => {
         { duration: 3, unit: "hour" },
       ]),
     ).toBe("3–4 hours");
-    expect(formatDuration([{ duration: 90, unit: "minute" }])).toBe("1.5 hours");
+    expect(formatDuration([{ duration: 90, unit: "minute" }])).toBe("1 hour 30 minutes");
+    expect(
+      formatDuration([
+        { duration: 75, unit: "minute" },
+        { duration: 90, unit: "minute" },
+      ]),
+    ).toBe("75–90 minutes");
+    expect(formatDuration([{ duration: 2, unit: "day" }])).toBe("2 days");
     expect(formatDuration([{ duration: 45, unit: "minute" }])).toBe("45 minutes");
     expect(formatDuration([{ duration: 1, unit: "day" }])).toBe("1 day");
     expect(formatDuration([])).toBeUndefined();

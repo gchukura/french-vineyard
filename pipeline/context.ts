@@ -73,6 +73,7 @@ export const ESTIMATE_USD = {
   check: 0.08, // per pass; two run per draft
   imageScore: 0.06, // up to eight 768 px previews
   tourNotes: 0.12, // up to three web searches and a short reply
+  hotelResearch: 0.15, // up to four web searches and a short reply
 };
 
 export async function loadContentFiles(): Promise<ContentFiles> {

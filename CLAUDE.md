@@ -10,6 +10,7 @@ Colours: chalk #F7F3EC (background), parchment #EFE8DB (surfaces), cellar #2B232
 ## Rules
 - Every affiliate link goes through /go/[provider]/[id] and carries rel="sponsored nofollow".
 - Tours come only from links the owner pastes into Tours_Inbox (or rows the owner adds to the Tours tab); the code never finds, adds or chooses a tour on its own. `tours:import` fills those tours in from the provider's API (or, for Winalist when enabled, its pages' schema.org data) and publishes the ones that meet content/selection-rules.md; the rest stay drafts with the reason in notes_flag.
+- Hotels come only from links the owner pastes into Hotels_Inbox (or rows the owner adds); the code never finds or adds a hotel on its own. `hotels:import` fills them in from the hotel's own site and official registers and publishes the ones it can place, classify and describe within the checks.
 - No tracking script loads before consent. Refuse is as easy as Accept.
 - No images of people drinking, glasses raised or parties. No copy that sells wine.
 - Never generate a photorealistic image of a real, named place.
@@ -24,7 +25,8 @@ Regions: slug, name, name_fr, tagline, intro_mdx, hero_image, hero_credit, hero_
 SubRegions: slug, region_slug, name, appellation_facts_json, intro_mdx, hero_image..., status
 Towns: slug, region_slug, subregion_slug, name, intro_mdx, body_mdx, lat, lng, station, estates_json, faq_json, hero_image..., status, updated_at
 Articles: slug, page_type (guide|ranked_list|hotel_roundup|itinerary|practical), region_slug, town_slug, title, standfirst, meta_description, body_mdx, faq_json, schema_type, tour_ids, hotel_ids, tags, cluster, target_keyword, secondary_keywords, search_intent, hero_image..., status, published_at, updated_at, refresh_after
-Hotels: id, name, town_slug, tier (budget|mid|luxury), booking_hotel_id, expedia_id, lat, lng, price_from_eur, blurb, best_for, image, image_credit
+Hotels: id, name, town_slug, tier (budget|mid|luxury), booking_hotel_id, expedia_id, lat, lng, price_from_eur, blurb, best_for, image, image_credit, status, stars, address, listing_url, notes_flag (hotels:import)
+Hotels_Inbox: url, added_at, processed, note (hotels:import reads it)
 Tours (hand-curated by the owner): id, provider (gyg|viator|winalist), provider_id, provider_url, region_slug, town_slug, category, rank, badge, best_for (AI-written), why_picked (AI-written), title, price_from_eur, duration, rating, review_count, bullets_json, image, featured, status, last_checked, link_flag (tours:check), notes_flag (tours:describe)
 Tours_Inbox: url, added_at, processed, note (tours:import reads it)
 Estates: id, name, town_slug, appellation, visits (walk-in|booking|appointment), tasting_fee_eur, languages, website, winalist_id

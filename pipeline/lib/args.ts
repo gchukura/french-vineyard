@@ -13,6 +13,9 @@ export const COMMANDS = [
   "tours:describe",
   "tours:queue",
   "tours:enrich",
+  "hotels:import",
+  "hotels:enrich",
+  "hotels:queue",
 ] as const;
 export type Command = (typeof COMMANDS)[number];
 
@@ -50,6 +53,9 @@ Commands:
   seed --file <f> append Queue rows from a JSON array (skips existing ids)
   images <n>      hero images for up to n published rows with no hero_image
   tours:import    Tours_Inbox URLs -> Tours rows, then enrich, describe and queue (the whole flow)
+  hotels:import   Hotels_Inbox links -> Hotels rows, then enrich and queue (the whole flow)
+  hotels:enrich   research imported hotels (town, stars, address, copy); publish those that pass
+  hotels:queue    queue a hotel_roundup page per town (and region) with 3+ published hotels
   tours:enrich    fill in imported drafts from the GetYourGuide API; publish those that meet the rules
   tours:check     follow each published tour's /go/ link; set last_checked or link_flag
   tours:describe  write best_for and why_picked for published tours missing them

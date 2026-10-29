@@ -19,7 +19,10 @@
     "tours:check": "tsx pipeline/cli.ts tours:check",
     "tours:describe": "tsx pipeline/cli.ts tours:describe",
     "tours:queue": "tsx pipeline/cli.ts tours:queue",
-    "tours:enrich": "tsx pipeline/cli.ts tours:enrich"
+    "tours:enrich": "tsx pipeline/cli.ts tours:enrich",
+    "hotels:import": "tsx pipeline/cli.ts hotels:import",
+    "hotels:enrich": "tsx pipeline/cli.ts hotels:enrich",
+    "hotels:queue": "tsx pipeline/cli.ts hotels:queue"
   },
   "dependencies": {
     "google-auth-library": "^11.3.1",

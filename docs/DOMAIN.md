@@ -70,6 +70,14 @@ The site stays out of search results until part 4.
    ```
 
 4. In Google Search Console, add a **Domain** property for `frenchvineyard.com` (verified with a DNS `TXT` record at the registrar) and submit `https://frenchvineyard.com/sitemap.xml`. In Bing Webmaster Tools, import the property from Search Console.
-5. Plausible already uses `NEXT_PUBLIC_PLAUSIBLE_DOMAIN=frenchvineyard.com`; confirm the site exists in Plausible under that name.
+5. **IndexNow (Bing and others).** The key file is already served at `https://frenchvineyard.com/5eabc586ed974dfab685501ed191bc3d.txt` (from `public/`). Turn pings on: add `INDEXNOW_KEY` = `5eabc586ed974dfab685501ed191bc3d` to `.env.local` and as a GitHub Actions **variable** (Settings → Secrets and variables → Actions → Variables). Then submit every page once:
+
+   ```sh
+   npm run pipeline -- indexnow     # "IndexNow: 127 URL(s) -> HTTP 200" (202 while Bing checks the key)
+   ```
+
+   From then on, `publish` (local and the weekly run) pings IndexNow with each page it publishes or refreshes.
+
+6. Plausible already uses `NEXT_PUBLIC_PLAUSIBLE_DOMAIN=frenchvineyard.com`; confirm the site exists in Plausible under that name.
 
 After launch, `french-vineyard.vercel.app` keeps serving the same deployment. Every page's canonical points at `https://frenchvineyard.com`, so search engines index the real domain.

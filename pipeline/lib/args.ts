@@ -68,7 +68,7 @@ Options:
   --dry-run          read the Sheet but write nothing; drafts go to pipeline/.dry-run/
   --no-redraft       check only: grade, and leave a failing draft in drafted
   --queue-file <f>   use Queue rows from a JSON file instead of the Queue tab
-  --only <ids>       comma-separated Queue ids (images: row slugs; card-images: tour or hotel ids)
+  --only <ids>       comma-separated Queue ids (images: row slugs; card-images, hotels:enrich: tour or hotel ids)
   --redo             images, card-images: also redo the --only rows that already have a photo
   --from <picks>     images: apply the reviewed picks in a dry run's picks.json to the --only rows
   --budget <usd>     spend cap for this run (default PIPELINE_BUDGET_USD)`;

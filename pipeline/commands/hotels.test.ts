@@ -215,6 +215,19 @@ describe("hotels:enrich", () => {
     );
   });
 
+  it("researches only the hotels named with --only", async () => {
+    const other = { ...draft, id: "booking-y", name: "Hotel Why", booking_hotel_id: "fr/y" };
+    const { ctx, call } = ctxWith(
+      { Hotels: [draft, other] },
+      { reply, seen: ["https://hotelx.example/"] },
+    );
+    (ctx.args as { only?: string[] }).only = ["booking-y"];
+    await hotelsEnrich(ctx);
+    // One research call, for the named hotel only (the prompt carries its name).
+    expect(call).toHaveBeenCalledOnce();
+    expect(JSON.stringify(call.mock.calls[0])).toContain("Hotel Why");
+  });
+
   it("keeps what research found when it leaves the name or copy null, and holds the hotel", async () => {
     // As for Hôtel de la Poste in Beaune: no best_for or blurb, everything else found.
     const { ctx, store } = ctxWith(

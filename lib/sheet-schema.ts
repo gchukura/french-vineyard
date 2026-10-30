@@ -217,6 +217,9 @@ export const hotelSchema = z.object({
   best_for: optionalText,
   image: optionalText,
   image_credit: optionalText,
+  // Written by hotels:enrich from cited pages; roundup briefs use them.
+  address: optionalText,
+  stars: optionalText,
   // Hotels has no status column; every row is live.
   status: status.default("published"),
 });

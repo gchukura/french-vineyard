@@ -55,7 +55,7 @@ export async function fetchBuffer(url: string, headers: Record<string, string> =
 // Searches
 // ---------------------------------------------------------------------------
 
-export async function searchCommons(query: string): Promise<Candidate[]> {
+export async function searchCommons(query: string, minWidth?: number): Promise<Candidate[]> {
   const params = new URLSearchParams({
     action: "query",
     format: "json",
@@ -73,7 +73,7 @@ export async function searchCommons(query: string): Promise<Candidate[]> {
     iiextmetadatalanguage: "en",
   });
   const res = await fetchOk(`https://commons.wikimedia.org/w/api.php?${params}`);
-  return parseCommons(await res.json());
+  return parseCommons(await res.json(), minWidth);
 }
 
 /** Pixabay requires responses to be cached for 24 hours; this keeps them on disk under pipeline/.cache/. */

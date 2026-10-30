@@ -8,6 +8,7 @@ export const COMMANDS = [
   "run",
   "seed",
   "images",
+  "card-images",
   "tours:import",
   "tours:check",
   "tours:describe",
@@ -52,8 +53,9 @@ Commands:
   run             research, draft, check and publish in sequence
   seed --file <f> append Queue rows from a JSON array (skips existing ids)
   images <n>      hero images for up to n published rows with no hero_image
-  tours:import    Tours_Inbox URLs -> Tours rows, then enrich, describe and queue (the whole flow)
-  hotels:import   Hotels_Inbox links -> Hotels rows, then enrich and queue (the whole flow)
+  card-images <n> card photos for up to n published tours and hotels with no image
+  tours:import    Tours_Inbox URLs -> Tours rows, then enrich, describe, card photos and queue (the whole flow)
+  hotels:import   Hotels_Inbox links -> Hotels rows, then enrich, card photos and queue (the whole flow)
   hotels:enrich   research imported hotels (town, stars, address, copy); publish those that pass
   hotels:queue    queue a hotel_roundup page per town (and region) with 3+ published hotels
   tours:enrich    fill in imported drafts from the GetYourGuide API; publish those that meet the rules
@@ -66,8 +68,8 @@ Options:
   --dry-run          read the Sheet but write nothing; drafts go to pipeline/.dry-run/
   --no-redraft       check only: grade, and leave a failing draft in drafted
   --queue-file <f>   use Queue rows from a JSON file instead of the Queue tab
-  --only <ids>       comma-separated Queue ids (images: row slugs)
-  --redo             images: also redo the --only rows that already have a hero
+  --only <ids>       comma-separated Queue ids (images: row slugs; card-images: tour or hotel ids)
+  --redo             images, card-images: also redo the --only rows that already have a photo
   --from <picks>     images: apply the reviewed picks in a dry run's picks.json to the --only rows
   --budget <usd>     spend cap for this run (default PIPELINE_BUDGET_USD)`;
 

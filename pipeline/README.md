@@ -112,6 +112,19 @@ npm run pipeline -- images --from pipeline/.dry-run/images-<time>/picks.json --o
 
 Every run writes `picks.md` and `picks.json` (all candidates, scores, notes, the pick, credit and alt) with each pick's preview under `pipeline/.images/images-<time>/`, or `pipeline/.dry-run/images-<time>/` for a dry run, where the AVIF and WebP files are saved instead of uploaded. The site shows the credit with `components/ImageCredit.tsx` under every hero, and `/image-credits/` lists every Images row.
 
+## Card photos (`card-images`)
+
+`card-images [n]` gives up to n published Tours and Hotels rows with an empty `image` a photo for their card. `tours:import` and `hotels:import` run it for everything still missing one (in CI that needs the `BLOB_READ_WRITE_TOKEN` secret and the `IMAGES_CONTACT_EMAIL` variable; without them it logs that card photos wait). Like `images`, **it never generates images**.
+
+1. **Candidates.**
+   - **Tours:** the tour's own photos from Viator's Partner API (`GET /products/{code}`, `parseViatorImages`): the operator's and Viator's (`SUPPLIER_PROVIDED`, `PROFESSIONAL`), never travelers' uploads, cover first, each at its largest landscape size (Viator serves up to 720×480). Credited "<operator> / Viator", licence "Viator partner content", source the tour's Viator page. GetYourGuide and Winalist tours have no photo source yet and go straight to step 4.
+   - **Hotels:** Wikimedia Commons, searched by the hotel's name and town (`hotelQueries`), with the same licence rules as heroes but a 640 px floor (`CARD_MIN_WIDTH`). Booking.com and Expedia photos aren't used: the site has no licence for them.
+2. **Score**: one vision call with `content/prompts/card-image-score.md`: the hero brief's hard rejects (people drinking, raised glasses, parties, bottles or pours as the subject, anything that sells wine), and for hotels a rule that the photo must show that hotel per its source metadata. The best unrejected candidate at or above `IMAGES_MIN_SCORE` (default 70) wins.
+3. **Store**: converted and uploaded as heroes are, to `images/tours/<id>-<hash>-<width>.<ext>` or `images/hotels/…`, at the fixed widths up to the source's own (a 720 px Viator photo is stored at 640). The row gets `image` (largest WebP) and `image_credit`; the Images tab gets a line with `used_on` the tour's region tours page or the hotel's town page.
+4. **Fallback**: a row with no pick takes its town's hero, else its region's, with that hero's credit, and the card's page is added to the hero's Images `used_on`.
+
+`--only` takes tour or hotel ids (or `Tours/<id>`, `Hotels/<id>`); with `--redo` it also redoes rows that have a photo. To turn a Viator photo down, add its image URL to `content/image-rejects.txt`. Every run writes `picks.json` and each pick's preview under `pipeline/.images/card-images-<time>/` (`.dry-run/` for a dry run, with the files saved instead of uploaded). The cards show `image_credit` over the photo, and `/image-credits/` lists the Images line.
+
 ## Tours
 
 The owner chooses every tour: they paste its link into Tours_Inbox, and that is the only step. The code never finds, adds or reorders a tour on its own. `npm run tours:import` does the rest: it turns the links into draft rows, fills them in from the GetYourGuide Partner API, publishes the ones that meet `content/selection-rules.md`, writes their notes and queues ranked lists. The weekly run does the same for anything left in the inbox.

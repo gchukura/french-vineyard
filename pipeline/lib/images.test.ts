@@ -18,6 +18,9 @@ import {
   searchQueries,
   stripHtml,
   variantPath,
+  hotelQueries,
+  parseViatorImages,
+  CARD_MIN_WIDTH,
   type ImageTarget,
 } from "./images";
 
@@ -111,12 +114,88 @@ describe("parseCommons", () => {
     expect(parseCommons({})).toEqual([]);
   });
 
+  it("accepts smaller files for cards when given a lower minimum width", () => {
+    const pages = [commonsPage({ width: 1200, height: 800 })];
+    expect(parseCommons({ query: { pages } })).toEqual([]);
+    expect(parseCommons({ query: { pages } }, CARD_MIN_WIDTH)).toHaveLength(1);
+  });
+
   it("keeps search order when pages come keyed by id", () => {
     const a = { ...commonsPage(), title: "File:A.jpg", index: 2 };
     const b = { ...commonsPage(), title: "File:B.jpg", index: 1 };
     expect(parseCommons({ query: { pages: { "9": a, "3": b } } }).map((c) => c.id)).toEqual([
       "File:B.jpg",
       "File:A.jpg",
+    ]);
+  });
+});
+
+describe("parseViatorImages", () => {
+  const variant = (w: number, h: number, name: string) => ({
+    width: w,
+    height: h,
+    url: `https://media-cdn.tripadvisor.com/${name}-${w}x${h}.jpg`,
+  });
+  const product = {
+    title: "Champagne day trip",
+    supplier: { name: "À La Française" },
+    images: [
+      {
+        imageSource: "SUPPLIER_PROVIDED",
+        caption: "Vineyards above Hautvillers",
+        isCover: false,
+        variants: [variant(400, 400, "a"), variant(720, 480, "a"), variant(480, 320, "a")],
+      },
+      { imageSource: "TRAVELER", isCover: false, variants: [variant(720, 480, "t")] },
+      { imageSource: "PROFESSIONAL", isCover: true, variants: [variant(674, 446, "c")] },
+      { imageSource: "SUPPLIER_PROVIDED", isCover: false, variants: [variant(400, 400, "sq")] },
+    ],
+  };
+  const tourUrl = "https://www.viator.com/tours/Reims/x/d5049-17408P6";
+
+  it("keeps the operator's and Viator's photos, cover first, each at its largest landscape size", () => {
+    const list = parseViatorImages(product, tourUrl);
+    expect(list.map((c) => c.downloadUrl)).toEqual([
+      "https://media-cdn.tripadvisor.com/c-674x446.jpg",
+      "https://media-cdn.tripadvisor.com/a-720x480.jpg",
+    ]);
+    expect(list[1]).toMatchObject({
+      provider: "viator",
+      title: "Vineyards above Hautvillers",
+      width: 720,
+      height: 480,
+      sourceUrl: tourUrl,
+      author: "À La Française",
+      credit: "À La Française / Viator",
+      license: "Viator partner content",
+    });
+    // No caption: the tour title stands in.
+    expect(list[0].title).toBe("Champagne day trip");
+  });
+
+  it("never offers travelers' uploads, square crops or empty products", () => {
+    const list = parseViatorImages(product, tourUrl);
+    expect(list.some((c) => c.downloadUrl.includes("/t-") || c.downloadUrl.includes("/sq-"))).toBe(
+      false,
+    );
+    expect(parseViatorImages({}, tourUrl)).toEqual([]);
+    expect(parseViatorImages({ images: product.images }, tourUrl)[0].credit).toBe(
+      "Tour operator / Viator",
+    );
+  });
+});
+
+describe("hotelQueries", () => {
+  it("searches the exact name with the town first", () => {
+    expect(hotelQueries("Domaine Les Crayères", "Reims")).toEqual([
+      '"Domaine Les Crayères" Reims',
+      "Domaine Les Crayères Reims",
+      "Domaine Les Crayères hotel",
+    ]);
+    expect(hotelQueries("  Hôtel  Pasteur ")).toEqual([
+      '"Hôtel Pasteur"',
+      "Hôtel Pasteur",
+      "Hôtel Pasteur hotel",
     ]);
   });
 });

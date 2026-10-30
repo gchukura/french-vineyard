@@ -14,6 +14,7 @@ export type TourCardTour = Pick<
   | "badge"
   | "why_picked"
   | "image"
+  | "image_credit"
   | "price_from_eur"
   | "duration"
   | "rating"
@@ -49,6 +50,11 @@ export function TourCard({
           ratio="3 / 2"
           sizes={SIZES.card}
         />
+        {tour.image && tour.image_credit ? (
+          <p className="absolute right-2 bottom-1 text-[11px] text-chalk/90 [text-shadow:0_0_3px_#2b2320]">
+            {tour.image_credit}
+          </p>
+        ) : null}
         {tour.badge ? (
           <span className="absolute top-3 left-3 rounded-button bg-vine px-2.5 py-1 text-xs font-semibold text-chalk">
             {tour.badge}

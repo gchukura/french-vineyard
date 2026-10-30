@@ -9,7 +9,7 @@ import { z } from "zod";
  * pipeline/media.ts.
  */
 
-export type Provider = "wikimedia" | "pixabay" | "pexels";
+export type Provider = "wikimedia" | "pixabay" | "pexels" | "viator";
 
 export type Candidate = {
   provider: Provider;
@@ -46,8 +46,11 @@ export const STOCK_SLOTS = 3;
 /** Commons originals above this are skipped rather than downloaded. */
 export const MAX_DOWNLOAD_BYTES = 50_000_000;
 
-export const isLandscape = (width: number, height: number) =>
-  width >= MIN_WIDTH && height > 0 && width / height >= MIN_RATIO;
+export const isLandscape = (width: number, height: number, minWidth = MIN_WIDTH) =>
+  width >= minWidth && height > 0 && width / height >= MIN_RATIO;
+
+/** Card photos show at card width (about 400 CSS px), so they may be smaller than heroes. */
+export const CARD_MIN_WIDTH = 640;
 
 // ---------------------------------------------------------------------------
 // Licences
@@ -108,7 +111,7 @@ type CommonsPage = {
 const COMMONS_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/tiff"]);
 
 /** Commons search results (generator=search, prop=imageinfo) that pass the licence and size rules. */
-export function parseCommons(json: unknown): Candidate[] {
+export function parseCommons(json: unknown, minWidth = MIN_WIDTH): Candidate[] {
   const pages = (json as { query?: { pages?: Record<string, CommonsPage> | CommonsPage[] } })?.query
     ?.pages;
   if (!pages) return [];
@@ -121,7 +124,7 @@ export function parseCommons(json: unknown): Candidate[] {
     const info = page.imageinfo?.[0];
     if (!info?.url || !info.width || !info.height || !info.descriptionurl) continue;
     if (!COMMONS_MIMES.has(info.mime ?? "")) continue;
-    if (!isLandscape(info.width, info.height)) continue;
+    if (!isLandscape(info.width, info.height, minWidth)) continue;
     if ((info.size ?? 0) > MAX_DOWNLOAD_BYTES) continue;
     const m = info.extmetadata ?? {};
     // Personality rights (identifiable people) are a reason to stay away.
@@ -236,6 +239,49 @@ export function parsePexels(json: unknown): Candidate[] {
     }));
 }
 
+type ViatorImage = {
+  imageSource?: string;
+  caption?: string;
+  isCover?: boolean;
+  variants?: { width: number; height: number; url: string }[];
+};
+
+/** Viator image sources a partner may show: the operator's and Viator's own, never travelers' uploads. */
+const VIATOR_SOURCES = new Set(["SUPPLIER_PROVIDED", "PROFESSIONAL"]);
+
+/**
+ * A Viator product's own photos (Partner API v2 /products/{code}), cover
+ * first, each at its largest landscape variant. Viator supplies them for
+ * partners to show with the product; the credit names the operator.
+ */
+export function parseViatorImages(json: unknown, tourUrl: string): Candidate[] {
+  const p = json as { title?: string; images?: ViatorImage[]; supplier?: { name?: string } };
+  const operator = p.supplier?.name?.trim() || "Tour operator";
+  const images = [...(p.images ?? [])].sort((a, b) => Number(!!b.isCover) - Number(!!a.isCover));
+  const out: Candidate[] = [];
+  for (const img of images) {
+    if (!VIATOR_SOURCES.has(img.imageSource ?? "")) continue;
+    const best = (img.variants ?? [])
+      .filter((v) => isLandscape(v.width, v.height, CARD_MIN_WIDTH))
+      .sort((a, b) => b.width - a.width)[0];
+    if (!best) continue;
+    out.push({
+      provider: "viator",
+      id: best.url,
+      title: img.caption?.trim() || p.title || "",
+      width: best.width,
+      height: best.height,
+      previewUrl: best.url,
+      downloadUrl: best.url,
+      sourceUrl: tourUrl,
+      author: operator,
+      credit: `${operator} / Viator`,
+      license: "Viator partner content",
+    });
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------------------
 // Targets and queries
 // ---------------------------------------------------------------------------
@@ -324,6 +370,13 @@ export function broadQueries(target: ImageTarget): string[] {
   return [...new Set(qs)].filter((q) => !specific.has(q));
 }
 
+/** Commons queries for a hotel's own photo, the exact name first. */
+export function hotelQueries(name: string, town?: string): string[] {
+  const n = name.replace(/\s+/g, " ").trim();
+  const qs = [town ? `"${n}" ${town}` : `"${n}"`, town ? `${n} ${town}` : n, `${n} hotel`];
+  return [...new Set(qs)];
+}
+
 /** Source page URLs from content/image-rejects.txt: one per line, # starts a comment. */
 export function parseRejects(text: string): string[] {
   return text
@@ -397,9 +450,12 @@ export function outputWidths(width: number): number[] {
   return ws.length ? ws : [WIDTHS[0]];
 }
 
+/** Tabs whose cards carry a photo (the `image` column). */
+export type CardTab = "Tours" | "Hotels";
+
 /** Blob path for one variant, e.g. images/towns/epernay-1a2b3c4d-1600.webp. */
 export function variantPath(
-  tab: ImageTab,
+  tab: ImageTab | CardTab,
   slug: string,
   sourceKey: string,
   width: number,

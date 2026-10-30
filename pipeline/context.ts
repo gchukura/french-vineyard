@@ -25,7 +25,7 @@ import { isoDate } from "./lib/dates";
 import type { StoredFactSheet } from "./lib/facts";
 import type { ContentFiles, DraftBrief, Target } from "./lib/prompt";
 import { appendUsage, queueSchema, type QueueRow } from "./lib/queue";
-import { selectHotels, selectTours } from "./lib/selection";
+import { placeHotels, selectHotels, selectTours } from "./lib/selection";
 import { embedsCards, TARGET_TAB } from "./lib/targets";
 import { parseTemplate, templateName, type Template } from "./lib/template";
 import { SheetStore } from "./sheet";
@@ -278,7 +278,9 @@ export class Context {
     // Place pages show tours and hotels from their own tabs, so their briefs carry none.
     const cards = embedsCards(row.target);
     const tours = cards ? selectTours(site.tours, { region, town, category: row.category }) : [];
-    const hotels = cards ? selectHotels(site.hotels, site.towns, { region, town }) : [];
+    const hotels = cards
+      ? placeHotels(selectHotels(site.hotels, site.towns, { region, town }), site.towns)
+      : [];
 
     const published = <T extends { status: string }>(xs: T[]) =>
       xs.filter((x) => x.status === "published");

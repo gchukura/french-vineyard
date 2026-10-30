@@ -1,8 +1,9 @@
 import { z } from "zod";
 
-import type { Hotel, Tour } from "@/lib/sheet-schema";
+import type { Tour } from "@/lib/sheet-schema";
 
 import type { Draft, Finding } from "./checks";
+import type { BriefHotel } from "./selection";
 import type { StoredFactSheet } from "./facts";
 import type { QueueRow } from "./queue";
 import type { Template } from "./template";
@@ -150,11 +151,19 @@ export function tourBrief(t: Tour) {
   };
 }
 
-export function hotelBrief(h: Hotel) {
+export function hotelBrief(h: BriefHotel) {
   return {
     id: h.id,
     name: h.name,
     town_slug: h.town_slug,
+    town: h.town_name,
+    address: h.address,
+    // Spelled out so the writer and checker both read it the same way.
+    distance_from_town_centre:
+      h.km_from_town_centre != null && h.town_name
+        ? `about ${h.km_from_town_centre} km (straight line) from the center of ${h.town_name}`
+        : undefined,
+    stars: h.stars,
     tier: h.tier,
     price_from_eur: h.price_from_eur,
     best_for: h.best_for,
@@ -185,7 +194,7 @@ export type DraftBrief = {
   target: Target;
   facts: StoredFactSheet;
   tours: Tour[];
-  hotels: Hotel[];
+  hotels: BriefHotel[];
   usdRate: number;
   /** Internal links the writer may use. */
   links: { name: string; href: string }[];

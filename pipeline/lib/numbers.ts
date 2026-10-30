@@ -18,17 +18,25 @@ export function numbersIn(text: string): string[] {
   return [...text.matchAll(NUMBER)].map((m) => normalizeNumber(m[0]));
 }
 
+/** Keys holding euro amounts, e.g. price_from_eur, tasting_fee_eur. */
+const PRICE_KEY = /(^|_)(price|fee|cost|eur)(_|$)/i;
+
 /**
  * Every number a draft may use: numbers anywhere in the given data (numeric
  * values and numbers inside strings), plus the hours and minutes of every
- * `duration_minutes` / `*_minutes` value.
+ * `duration_minutes` / `*_minutes` value, and the whole-euro rounding of
+ * prices (87.19 may be written "€87"; ratings are never rounded).
  */
 export function allowedNumbers(...data: unknown[]): Set<string> {
   const out = new Set<string>();
   const add = (n: number) => out.add(normalizeNumber(String(n)));
+  const addPrice = (n: number, key: string) => {
+    if (PRICE_KEY.test(key) && !Number.isInteger(n)) add(Math.round(n));
+  };
   const walk = (v: unknown, key = "") => {
     if (typeof v === "number") {
       add(v);
+      addPrice(v, key);
       if (/minutes$/.test(key)) {
         add(Math.floor(v / 60));
         add(v % 60);
@@ -37,7 +45,10 @@ export function allowedNumbers(...data: unknown[]): Set<string> {
     } else if (typeof v === "string") {
       // Skip URLs: their digits are ids, not facts.
       const text = v.replace(/https?:\/\/\S+/g, "");
-      for (const n of numbersIn(text)) out.add(n);
+      for (const n of numbersIn(text)) {
+        out.add(n);
+        addPrice(Number(n), key);
+      }
       // Clock times ("17:30", "9.30am", "14h00") may be written in 12-hour form.
       for (const m of text.matchAll(/(?<!\d)([01]?\d|2[0-3])[:h.]([0-5]\d)(?!\d)/g)) {
         add(Number(m[1]) % 12 || 12);

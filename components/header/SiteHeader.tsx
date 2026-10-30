@@ -1,21 +1,10 @@
 import Link from "next/link";
 
+import { Logo } from "@/components/Logo";
 import { ButtonLink } from "@/components/SmartLink";
 import { RegionsMenu, type MenuRegion } from "@/components/header/RegionsMenu";
 import { goHref } from "@/lib/links";
-import { NAV, REGIONS_INDEX_HREF, SITE_NAME, regionHref } from "@/lib/site";
-
-export function Wordmark() {
-  return (
-    <Link
-      href="/"
-      className="inline-flex min-h-11 items-center font-heading text-lg font-semibold tracking-tight sm:text-xl"
-    >
-      French<span className="text-primary dark:text-accent">Vineyard</span>
-      <span className="sr-only"> — {SITE_NAME} home</span>
-    </Link>
-  );
-}
+import { NAV, REGIONS_INDEX_HREF, regionHref } from "@/lib/site";
 
 /** Presentational header; `Header` feeds it published regions from the Sheet. */
 export function SiteHeader({
@@ -30,7 +19,7 @@ export function SiteHeader({
       className={`${sticky ? "sticky top-0 z-40" : "relative z-30"} border-b border-accent/30 bg-background/92 backdrop-blur-sm`}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
-        <Wordmark />
+        <Logo />
 
         <nav aria-label="Main" className="ml-auto hidden items-center lg:flex">
           <RegionsMenu regions={regions} />
@@ -48,7 +37,7 @@ export function SiteHeader({
         <ButtonLink
           href={goHref("gyg", "home", "header")}
           size="compact"
-          className="ml-auto lg:ml-2"
+          className="ml-auto shrink-0 lg:ml-2"
         >
           Book a Tour
         </ButtonLink>

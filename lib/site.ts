@@ -27,11 +27,15 @@ export const NAV: NavItem[] = [
   { label: "Getting There", href: GETTING_THERE_HREF },
 ];
 
-export const LEGAL_LINKS: NavItem[] = [
-  { label: "About us", href: "/about/" },
-  { label: "Contact", href: "/contact/" },
-  { label: "Privacy policy", href: "/privacy-policy/" },
-  { label: "Legal notice", href: "/legal-notice/" },
+/** A legal or about page; `configKey` names the Config row its copy lives in (no copy, no page). */
+export type LegalLink = NavItem & { configKey?: string };
+
+export const LEGAL_LINKS: LegalLink[] = [
+  { label: "About us", href: "/about/", configKey: "about_mdx" },
+  { label: "Contact", href: "/contact/", configKey: "contact_mdx" },
+  { label: "Privacy policy", href: "/privacy-policy/", configKey: "privacy_policy_mdx" },
+  { label: "Legal notice", href: "/legal-notice/", configKey: "legal_notice_mdx" },
+  // Lists the Images tab, so it renders with or without intro copy.
   { label: "Image credits", href: "/image-credits/" },
 ];
 

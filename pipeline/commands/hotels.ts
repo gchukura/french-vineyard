@@ -135,7 +135,9 @@ export async function hotelsEnrich(ctx: Context): Promise<number> {
     .filter(
       (h) =>
         h.status?.trim().toLowerCase() === "draft" &&
-        (!h.tier?.trim() || h.notes_flag?.startsWith(AUTO)),
+        (!h.tier?.trim() || h.notes_flag?.startsWith(AUTO)) &&
+        // --only <ids>: just these hotels, e.g. new links without re-researching every held one.
+        (!ctx.args.only || ctx.args.only.includes(h.id)),
     )
     .slice(0, ctx.args.max);
   if (!todo.length) return 0;

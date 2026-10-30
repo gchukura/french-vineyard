@@ -97,17 +97,27 @@ export function tierFor(stars: number | null | undefined, palace = false): Tier 
 
 export const BLURB_MAX = 220;
 
+/**
+ * Text the research call may leave out (null when it couldn't confirm it):
+ * read as empty, so the stars, address and town it did find are still kept.
+ * An empty name keeps the row's name; empty copy holds the hotel as a draft.
+ */
+const optionalCopy = z
+  .string()
+  .nullish()
+  .transform((v) => v ?? "");
+
 /** What the research call returns for one hotel. */
 export const hotelResearchSchema = z.object({
-  name: z.string(),
+  name: optionalCopy,
   /** One of the town names it was given, or null when the hotel is in none of them. */
   town: z.string().nullable(),
   address: z.string().nullish(),
   stars: z.number().int().min(1).max(5).nullish(),
   palace: z.boolean().nullish(),
   official_url: z.string().nullish(),
-  best_for: z.string(),
-  blurb: z.string(),
+  best_for: optionalCopy,
+  blurb: optionalCopy,
   sources: z.array(z.object({ url: z.string(), quote: z.string() })).default([]),
 });
 export type HotelResearch = z.infer<typeof hotelResearchSchema>;

@@ -88,6 +88,23 @@ describe("agreedFindings", () => {
     expect(single[0].fix).toMatch(/^\(Flagged by one of two checks\.\)/);
   });
 
+  it("blocks only when both passes rate the shared finding an error", () => {
+    const quote = "You do not need a car on arrival in Épernay.";
+    const { agreed } = agreedFindings(
+      [finding("facts_sourced", quote, "error")],
+      [finding("facts_sourced", quote, "warning")],
+    );
+    expect(agreed).toHaveLength(1);
+    expect(agreed[0].severity).toBe("warning");
+    expect(agreed[0].fix).toMatch(/^\(Rated an error by at most one of two checks\.\)/);
+
+    const both = agreedFindings(
+      [finding("facts_sourced", quote, "error")],
+      [finding("facts_sourced", quote, "error")],
+    );
+    expect(both.agreed[0].severity).toBe("error");
+  });
+
   it("needs the same rule, and pairs each finding once", () => {
     const a = [
       finding("facts_sourced", "Spit if you are driving."),

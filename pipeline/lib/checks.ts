@@ -151,7 +151,8 @@ export const TWENTY_FOUR_HOUR = [
   /\b(?:1\d|2[0-3])h(?:[0-5]\d)?\b/g,
 ];
 
-export const RAW_AFFILIATE = /https?:\/\/(www\.)?(getyourguide|viator|booking|expedia|winalist)\.[a-z.]+/i;
+export const RAW_AFFILIATE =
+  /https?:\/\/(www\.)?(getyourguide|viator|booking|expedia|winalist)\.[a-z.]+/i;
 
 export type CheckInput = {
   draft: Draft;
@@ -374,9 +375,14 @@ function around(text: string, index: number, length: number): string {
     .trim();
 }
 
-/** A model finding whose own fix says nothing needs to change. */
+/**
+ * A model finding whose own fix says the quoted text is fine, so nothing in
+ * it needs to change ("no change is needed", "the draft avoids this, so this
+ * is fine", "the claim is sourced"). Advice about other text in the same fix
+ * ("…, but remove X elsewhere") is not about the quote, so it can't block it.
+ */
 export function isWithdrawn(f: Finding): boolean {
-  return /\b(?:no (?:change|fix|edit)s? (?:is |are )?needed|nothing to (?:change|fix)|(?:this )?finding is withdrawn|withdraw(?:n)? this|dismiss this(?: one)?|this (?:is acceptable|passes|is sourced)|is correct, so no|so no change(?: here)?|not a (?:number|trivia|style) problem)\b/i.test(
+  return /\b(?:no (?:change|fix|edit)s? (?:is |are )?needed|nothing to (?:change|fix)|(?:this )?finding is withdrawn|withdraw(?:n)? this|dismiss this(?: one)?|this (?:is acceptable|passes|is sourced|is fine|is allowed)|is fine as (?:written|sourced|is)|the draft avoids this|the claim is (?:sourced|supported)|is correct, so no|so no change(?: here)?|not a (?:number|trivia|style) problem|do not flag)\b/i.test(
     f.fix,
   );
 }
@@ -405,8 +411,9 @@ export function quotesOverlap(a: string, b: string): boolean {
 
 /**
  * Model findings from two independent check passes. A finding is agreed when
- * both passes report the same rule with overlapping quotes; only agreed errors
- * block a draft. The rest are kept as warnings so the writer still sees them.
+ * both passes report the same rule with overlapping quotes; it blocks the
+ * draft only when both rate it an error. The rest are kept as warnings so the
+ * writer still sees them.
  */
 export function agreedFindings(
   a: Finding[],
@@ -421,7 +428,16 @@ export function agreedFindings(
     );
     if (j >= 0) {
       usedB.add(j);
-      agreed.push(f);
+      // One pass's error and the other's warning is not agreement that it must change.
+      agreed.push(
+        f.severity === "error" && b[j].severity === "error"
+          ? f
+          : {
+              ...f,
+              severity: "warning",
+              fix: `(Rated an error by at most one of two checks.) ${f.fix}`,
+            },
+      );
     } else single.push(f);
   }
   b.forEach((g, i) => {

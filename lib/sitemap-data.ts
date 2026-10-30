@@ -1,5 +1,6 @@
 import "server-only";
 
+import { liveLegalLinks } from "@/lib/config";
 import { latestDate } from "@/lib/content";
 import { areasIn, getSiteData, townsIn, type SiteData } from "@/lib/data";
 import type { SitemapEntry } from "@/lib/sitemap";
@@ -62,7 +63,8 @@ function entries(d: SiteData, type: SitemapType): SitemapEntry[] {
             ),
           ),
         },
-        ...LEGAL_LINKS.map((l) => ({ path: l.href })),
+        // Only legal pages whose copy is published: drafts answer 404.
+        ...liveLegalLinks(LEGAL_LINKS, d.config).map((l) => ({ path: l.href })),
       ];
     case "regions":
       return d.regions.map((r) => ({

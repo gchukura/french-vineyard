@@ -14,6 +14,14 @@ export function configText(config: Config, key: string): string | undefined {
   return config.get(key)?.value || undefined;
 }
 
+/**
+ * The legal links whose page exists: those with no Config row behind them,
+ * and those whose copy is published (LegalPage answers 404 otherwise).
+ */
+export function liveLegalLinks<T extends { configKey?: string }>(links: T[], config: Config): T[] {
+  return links.filter((l) => !l.configKey || Boolean(configText(config, l.configKey)));
+}
+
 /** A JSON config value validated by `schema`; falls back on blank or invalid JSON. */
 export function configJson<T>(config: Config, key: string, schema: z.ZodType<T>, fallback: T): T {
   const raw = configText(config, key);

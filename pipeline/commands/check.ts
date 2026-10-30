@@ -34,6 +34,15 @@ function numbersFor(ctx: Context, brief: DraftBrief, h2PerTour: boolean): Set<st
 /** Rules runChecks measures exactly; the model's opinion on them is ignored. */
 const AUTOMATED_RULES = new Set(["twelve_hour_times", "word_count", "check_lines"]);
 
+/**
+ * runChecks matches every number written in digits against the fact sheet,
+ * tours and hotels (with a tolerance for $ conversions), so the model's
+ * numbers_sourced findings count only for numbers written as words. On
+ * digits it disputed correct roundings ("€11 ($12)") and sourced figures.
+ */
+export const isAutomatedFinding = (f: Pick<Finding, "rule" | "quote">) =>
+  AUTOMATED_RULES.has(f.rule) || (f.rule === "numbers_sourced" && /\d/.test(f.quote));
+
 /** Grades one draft: deterministic checks, then the model's grade. */
 export async function gradeDraft(ctx: Context, row: QueueRow, draft: Draft): Promise<CheckResult> {
   const brief = await ctx.brief(row);
@@ -81,7 +90,7 @@ export async function gradeDraft(ctx: Context, row: QueueRow, draft: Draft): Pro
   // ("no change is needed"); those aren't problems, so they don't count.
   // Rules the deterministic checks measure exactly are theirs alone.
   const usable = (g: (typeof grades)[number]) =>
-    g.findings.filter((f) => !isWithdrawn(f) && !AUTOMATED_RULES.has(f.rule));
+    g.findings.filter((f) => !isWithdrawn(f) && !isAutomatedFinding(f));
   const { agreed, single } = agreedFindings(usable(grades[0]), usable(grades[1]));
   const modelFindings = [...agreed, ...single];
   const errors = automated.findings.filter((f) => f.severity === "error").length;

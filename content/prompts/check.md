@@ -13,8 +13,9 @@ You will receive:
 
 Grade each rule as pass or fail, quoting the exact text that fails.
 
-1. **numbers_sourced**: every number in the draft appears in the fact sheet, tours or hotels, or is a USD conversion in parentheses at the brief's rate, or an hours-and-minutes version of a duration in minutes. The automated findings list unmatched numbers; confirm or dismiss each one and look for numbers they missed (numbers written as words, such as "fifteen minutes", count too).
+1. **numbers_sourced**: every number in the draft appears in the fact sheet, tours or hotels, or is a USD conversion in parentheses at the brief's rate, or an hours-and-minutes version of a duration in minutes. Numbers written in digits are matched automatically, including USD conversions within rounding; trust the automated findings and don't report digits yourself. Report only numbers written as words ("fifteen minutes", "a dozen houses") that the brief doesn't support.
 2. **facts_sourced**: every factual claim (names, opening periods, visit types, rules, distances) is supported by the fact sheet, tours or hotels. Inferences added on top of a sourced fact ("so you can…," "which makes it a good base," an unsourced count such as "three houses worth visiting") fail. Claims that are general common sense ("wear comfortable shoes") pass, and so does general safety advice about tasting and driving ("spit as you go," "choose a designated driver"). Claims about the drink-drive law itself (its limit or how strict it is) need the fact sheet. Claims about specific places, prices or schedules that aren't in the brief fail.
+   These pass, because they restate the brief rather than add to it: a sourced fact stated plainly without naming its source ("No car is needed on arrival" when the tourist office says so; don't ask the writer to attribute it); a sourced duration or distance in another unit or form (104 minutes as "1 hour 44 minutes"); and counting or grouping the brief's own fields ("two of the three hotels have an Épernay address", "the hotels below are listed by town"). Flag the inference, not the restatement: "so it's the best base" fails, "it is 0.6 km from the center" passes.
 3. **no_banned_phrases**: none of the banned phrases or close variants appear.
 4. **word_count**: the body is within the template's word range. Trust the automated count.
 5. **required_headings**: every required heading is present as an H2.
@@ -41,3 +42,5 @@ Return JSON with:
 - `findings`: one entry per problem, each with `rule` (the rule name above), `severity` (`error` for rules 1–12, `warning` for style), `quote` (the exact text from the draft, under 200 characters) and `fix` (one sentence the writer can act on).
 
 List only problems the writer must fix. If you consider something and decide it is fine, leave it out: never include a finding whose fix says no change is needed. Return an empty `findings` list if there is nothing to fix.
+
+Each finding is about its quote: the quoted text itself must change. Don't attach advice about other passages to a quote that is fine ("this is fine, but remove X elsewhere"); quote X instead. Where a hotel's blurb and its `distance_from_town_centre` disagree, the distance field is the one to use, and a draft that uses it (or gives no distance) passes.

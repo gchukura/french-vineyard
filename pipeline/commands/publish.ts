@@ -1,4 +1,5 @@
 import { sheetTag } from "@/lib/sheet-schema";
+import { areaHref, articleHref, regionHref, townHref, type ArticlePageType } from "@/lib/site";
 
 import type { Context } from "../context";
 import type { Draft } from "../lib/checks";
@@ -11,6 +12,7 @@ import {
   TARGET_TAB,
   waitsForRegion,
 } from "../lib/targets";
+import { notifyIndexNow } from "./indexnow";
 
 /** POSTs the tags to /api/revalidate. In a dry run, only logs them. */
 export async function revalidate(ctx: Context, tags: string[]): Promise<void> {
@@ -37,7 +39,21 @@ export async function revalidate(ctx: Context, tags: string[]): Promise<void> {
   ctx.log(`revalidated ${tags.join(", ")}`);
 }
 
-async function publishRow(ctx: Context, row: QueueRow): Promise<string> {
+/** The site path of a published content row. */
+function pagePath(tab: string, row: Record<string, string>): string {
+  switch (tab) {
+    case "Articles":
+      return articleHref({ slug: row.slug, page_type: row.page_type as ArticlePageType });
+    case "Towns":
+      return townHref(row.slug);
+    case "Regions":
+      return regionHref(row.slug);
+    default:
+      return areaHref(row.region_slug, row.slug);
+  }
+}
+
+async function publishRow(ctx: Context, row: QueueRow): Promise<{ tag: string; path: string }> {
   if (!row.draft_json) throw new Error("No draft_json to publish");
   const draft = JSON.parse(row.draft_json) as Draft;
   const template = await ctx.template(row);
@@ -61,7 +77,7 @@ async function publishRow(ctx: Context, row: QueueRow): Promise<string> {
     refresh_after: refreshAfter,
   });
   ctx.log(`${row.id} published to ${tab}/${row.slug}; refresh after ${refreshAfter}`);
-  return sheetTag(tab);
+  return { tag: sheetTag(tab), path: pagePath(tab, { ...existing, ...patch }) };
 }
 
 /** Whether the row's region is published (always true for rows that don't wait on one). */
@@ -86,6 +102,7 @@ export async function publish(ctx: Context, max = ctx.args.max): Promise<number>
   );
   ctx.log(`publish: ${rows.length} checked row(s)`);
   const tags = new Set<string>();
+  const paths: string[] = [];
   const held: string[] = [];
   let published = 0;
   for (const row of rows) {
@@ -95,7 +112,9 @@ export async function publish(ctx: Context, max = ctx.args.max): Promise<number>
         held.push(row.id);
         continue;
       }
-      tags.add(await publishRow(ctx, row));
+      const done = await publishRow(ctx, row);
+      tags.add(done.tag);
+      paths.push(done.path);
       published++;
     } catch (error) {
       ctx.log(`${row.id} publish failed: ${(error as Error).message}`);
@@ -111,5 +130,7 @@ export async function publish(ctx: Context, max = ctx.args.max): Promise<number>
     );
   }
   await revalidate(ctx, [...tags]);
+  // After the revalidate, so search engines fetch the new version.
+  await notifyIndexNow(ctx, paths);
   return published;
 }

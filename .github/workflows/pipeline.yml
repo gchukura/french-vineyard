@@ -105,8 +105,10 @@ jobs:
           PIPELINE_EUR_USD_RATE: ${{ vars.PIPELINE_EUR_USD_RATE }}
           SITE_URL: ${{ vars.SITE_URL || 'https://frenchvineyard.com' }}
           REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+      # Published and refreshed pages are pinged to IndexNow once INDEXNOW_KEY is set (launch day).
       - run: npm run pipeline -- publish --max ${{ inputs.max || '30' }}
         env:
+          INDEXNOW_KEY: ${{ vars.INDEXNOW_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           PIPELINE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.PIPELINE_SERVICE_ACCOUNT_EMAIL }}
           PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY }}

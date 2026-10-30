@@ -7,6 +7,7 @@ import { check } from "./commands/check";
 import { draft } from "./commands/draft";
 import { hotelsEnrich, hotelsImport, hotelsQueue } from "./commands/hotels";
 import { images } from "./commands/images";
+import { indexnow } from "./commands/indexnow";
 import { toursCheck, toursDescribe, toursImport, toursQueue } from "./commands/tours";
 import { toursEnrich } from "./commands/tours-enrich";
 import { init } from "./commands/init";
@@ -69,6 +70,9 @@ async function main() {
         break;
       case "card-images":
         await cardImages(ctx);
+        break;
+      case "indexnow":
+        await indexnow(ctx);
         break;
       case "tours:import":
         // The whole flow: the owner only pastes links. Import, fill in and publish

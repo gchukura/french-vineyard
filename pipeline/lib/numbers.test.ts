@@ -37,6 +37,21 @@ describe("allowedNumbers", () => {
     expect(allowed.has("15")).toBe(true);
     expect(allowed.has("1.3")).toBe(true);
   });
+
+  it("allows whole-euro roundings of prices, but not of ratings", () => {
+    // Sheet rows hold numbers as strings.
+    const allowed = allowedNumbers({
+      price_from_eur: "87.19",
+      tasting_fee_eur: 12.5,
+      rating: "4.5",
+    });
+    expect(allowed.has("87.19")).toBe(true);
+    expect(allowed.has("87")).toBe(true);
+    expect(allowed.has("13")).toBe(true);
+    expect(allowed.has("4.5")).toBe(true);
+    expect(allowed.has("5")).toBe(false);
+    expect(allowed.has("88")).toBe(false);
+  });
 });
 
 describe("unmatchedNumbers", () => {

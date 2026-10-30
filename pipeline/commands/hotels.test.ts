@@ -214,6 +214,30 @@ describe("hotels:enrich", () => {
       "auto: held as draft: no official star rating in a quoted source, so no tier",
     );
   });
+
+  it("keeps what research found when it leaves the name or copy null, and holds the hotel", async () => {
+    // As for Hôtel de la Poste in Beaune: no best_for or blurb, everything else found.
+    const { ctx, store } = ctxWith(
+      { Hotels: [draft] },
+      {
+        reply: { ...reply, name: null, best_for: null, blurb: null },
+        seen: ["https://hotelx.example/"],
+      },
+    );
+    expect(await hotelsEnrich(ctx)).toBe(0);
+    const row = (await store.rows("Hotels"))[0];
+    expect(row).toMatchObject({
+      name: "X",
+      town_slug: "epernay",
+      tier: "mid",
+      stars: "4",
+      address: "12 Avenue de Champagne, 51200 Épernay",
+      best_for: "",
+      blurb: "",
+      status: "draft",
+    });
+    expect(row.notes_flag).toMatch(/^auto: held as draft: copy: .*Write best_for/);
+  });
 });
 
 describe("hotels:queue", () => {

@@ -7,7 +7,10 @@ import { NAV, REGIONS_INDEX_HREF, SITE_NAME, regionHref } from "@/lib/site";
 
 export function Wordmark() {
   return (
-    <Link href="/" className="font-heading text-lg font-semibold tracking-tight sm:text-xl">
+    <Link
+      href="/"
+      className="inline-flex min-h-11 items-center font-heading text-lg font-semibold tracking-tight sm:text-xl"
+    >
       French<span className="text-primary dark:text-accent">Vineyard</span>
       <span className="sr-only"> — {SITE_NAME} home</span>
     </Link>

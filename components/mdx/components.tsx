@@ -58,8 +58,10 @@ function MdxPracticalTable({
     .map((r) => r.trim())
     .filter(Boolean)
     .map((r) => r.split("|").map((c) => c.trim()));
+  // Skip blanks: Number("") is 0, which would right-align the first column of every table.
   const nums = numeric
     .split(",")
+    .filter((n) => n.trim())
     .map((n) => Number(n.trim()))
     .filter((n) => Number.isInteger(n));
   return (

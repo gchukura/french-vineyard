@@ -31,7 +31,7 @@ export function ToursPage({ d, region }: { d: SiteData; region?: Region }) {
       <PageTop
         eyebrow="Tours & tastings"
         title={title}
-        standfirst="Every tour here is picked and ranked by hand. Prices are from prices; check details before you book."
+        standfirst="Every tour here is picked and ranked by hand. Prices shown are starting prices; check the details before you book."
         crumbs={crumbs}
       />
       <div className={`${wrap} space-y-10 py-10`}>

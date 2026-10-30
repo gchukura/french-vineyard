@@ -93,6 +93,19 @@ describe("tours:import", () => {
     ]);
     expect(inbox[0].added_at).toBe("2026-10-26T12:00:00.000Z");
   });
+
+  it("marks every copy of a link pasted twice", async () => {
+    const url = "https://www.viator.com/tours/Paris/Champagne-WineDay-Tour/d479-35428P1";
+    const { ctx, store } = ctxWith({ Tours: [], Tours_Inbox: [{ url }, { url }] });
+
+    expect(await toursImport(ctx)).toBe(1);
+
+    const inbox = await store.rows("Tours_Inbox");
+    expect(inbox.map((r) => [r.processed, r.note])).toEqual([
+      ["TRUE", "Added to Tours as viator-35428p1 (draft)"],
+      ["TRUE", "Already in Tours as viator-35428p1"],
+    ]);
+  });
 });
 
 describe("tours:queue", () => {

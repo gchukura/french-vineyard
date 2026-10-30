@@ -70,11 +70,12 @@ export async function toursImport(ctx: Context): Promise<number> {
   const ids = new Set(tours.map((t) => t.id));
   let added = 0;
 
-  for (const row of await ctx.store.rows("Tours_Inbox")) {
+  for (const [i, row] of (await ctx.store.rows("Tours_Inbox")).entries()) {
     const url = row.url?.trim();
     if (!url || truthy(row.processed)) continue;
+    // By position: the same link can be pasted twice.
     const mark = (patch: Record<string, string>) =>
-      ctx.store.update("Tours_Inbox", "url", row.url, {
+      ctx.store.updateAt("Tours_Inbox", i, {
         ...(row.added_at ? {} : { added_at: ctx.now() }),
         ...patch,
       });

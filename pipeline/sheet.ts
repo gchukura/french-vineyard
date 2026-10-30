@@ -156,14 +156,30 @@ export class SheetStore {
     patch: Record<string, string>,
   ): Promise<void> {
     const t = await this.load(tab);
+    const index = t.rows.findIndex((r) => r.data[key] === value);
+    if (index < 0) throw new Error(`${tab}: no row with ${key}=${value}`);
+    await this.updateAt(tab, index, patch, `${key}=${value}`);
+  }
+
+  /**
+   * Updates the row at `index` in `rows(tab)` order. For tabs where the key
+   * can repeat, such as the same link pasted twice into an inbox.
+   */
+  async updateAt(
+    tab: string,
+    index: number,
+    patch: Record<string, string>,
+    label = `row ${index + 2}`,
+  ): Promise<void> {
+    const t = await this.load(tab);
     this.assertColumns(tab, t.headers, patch);
-    const row = t.rows.find((r) => r.data[key] === value);
-    if (!row) throw new Error(`${tab}: no row with ${key}=${value}`);
+    const row = t.rows[index];
+    if (!row) throw new Error(`${tab}: no ${label}`);
     Object.assign(row.data, patch);
-    this.writes.push({ tab, op: "update", key: `${key}=${value}`, values: patch });
+    this.writes.push({ tab, op: "update", key: label, values: patch });
     if (this.dryRun) return;
     const handle = row.handle;
-    if (!handle) throw new Error(`${tab}: row ${key}=${value} has no Sheet handle`);
+    if (!handle) throw new Error(`${tab}: ${label} has no Sheet handle`);
     await this.serialized(async () => {
       handle.assign(patch);
       await withRetry(() => handle.save({ raw: true }));

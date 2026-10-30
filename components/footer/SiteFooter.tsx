@@ -1,17 +1,17 @@
 import Link from "next/link";
 
+import { Logo } from "@/components/Logo";
 import { ConsentSettingsButton } from "@/components/consent/ConsentSettingsButton";
-import { Wordmark } from "@/components/header/SiteHeader";
 import { LEGAL_LINKS, NAV, REGIONS_INDEX_HREF, regionHref } from "@/lib/site";
 
 const ABOUT = LEGAL_LINKS;
 
-const linkClass = "inline-flex min-h-8 items-center hover:text-primary dark:hover:text-accent";
+const linkClass = "inline-flex min-h-8 items-center hover:text-accent";
 
 function Column({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="font-sans text-xs font-semibold tracking-widest text-muted uppercase">
+      <h2 className="font-sans text-xs font-semibold tracking-widest text-chalk/70 uppercase">
         {title}
       </h2>
       <ul className="mt-3 space-y-1 text-sm">{children}</ul>
@@ -20,12 +20,13 @@ function Column({ title, children }: { title: string; children: React.ReactNode 
 }
 
 export function SiteFooter({ regions }: { regions: { slug: string; name: string }[] }) {
+  // Dark in both themes: cellar sits a step above the cellar-night page in dark mode.
   return (
-    <footer className="mt-auto border-t border-accent/40 bg-surface">
+    <footer className="mt-auto border-t border-accent/40 bg-cellar text-chalk">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         <div>
-          <Wordmark />
-          <p className="mt-3 text-sm text-muted">
+          <Logo reversed />
+          <p className="mt-4 text-sm text-chalk/75">
             An independent guide, not affiliated with Booking.com or GetYourGuide. We may earn a
             commission when you book through our links, at no extra cost to you.
           </p>
@@ -67,7 +68,7 @@ export function SiteFooter({ regions }: { regions: { slug: string; name: string 
         </Column>
       </div>
       <div className="border-t border-accent/30">
-        <p className="mx-auto max-w-6xl px-4 py-5 text-xs text-muted sm:px-6">
+        <p className="mx-auto max-w-6xl px-4 py-5 text-xs text-chalk/70 sm:px-6">
           Please taste responsibly: use the spittoon, know your limits and never drink and drive.
           Alcohol is not sold to anyone under 18 in France.
         </p>

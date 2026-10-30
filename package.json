@@ -22,7 +22,8 @@
     "tours:enrich": "tsx pipeline/cli.ts tours:enrich",
     "hotels:import": "tsx pipeline/cli.ts hotels:import",
     "hotels:enrich": "tsx pipeline/cli.ts hotels:enrich",
-    "hotels:queue": "tsx pipeline/cli.ts hotels:queue"
+    "hotels:queue": "tsx pipeline/cli.ts hotels:queue",
+    "brand": "node scripts/brand-assets.mts"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

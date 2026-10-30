@@ -240,6 +240,7 @@ export const tourSchema = z.object({
   review_count: optionalNumber,
   bullets_json: json(z.array(z.string()), []),
   image: optionalText,
+  image_credit: optionalText,
   featured: bool,
   status,
   last_checked: optionalText,

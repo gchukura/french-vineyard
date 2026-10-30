@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { cardImages } from "./commands/card-images";
 import { check } from "./commands/check";
 import { draft } from "./commands/draft";
 import { hotelsEnrich, hotelsImport, hotelsQueue } from "./commands/hotels";
@@ -66,11 +67,16 @@ async function main() {
       case "images":
         await images(ctx);
         break;
+      case "card-images":
+        await cardImages(ctx);
+        break;
       case "tours:import":
         // The whole flow: the owner only pastes links. Import, fill in and publish
-        // the tours that meet the selection rules, write their notes, queue ranked lists.
+        // the tours that meet the selection rules, write their notes, give them
+        // photos, queue ranked lists.
         await toursImport(ctx);
         if (await toursEnrich(ctx)) await toursDescribe(ctx);
+        await cardImages(ctx, { auto: true });
         await toursQueue(ctx);
         break;
       case "tours:enrich":
@@ -80,6 +86,7 @@ async function main() {
         // The whole flow: the owner only pastes links.
         await hotelsImport(ctx);
         await hotelsEnrich(ctx);
+        await cardImages(ctx, { auto: true });
         await hotelsQueue(ctx);
         break;
       case "hotels:enrich":

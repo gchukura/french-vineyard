@@ -32,13 +32,16 @@ jobs:
       - run: npm ci
       # Links the owner pasted into Tours_Inbox: import them, fill them in (GetYourGuide
       # and Viator APIs; Winalist pages when WINALIST_READ_PAGES=1), publish those that
-      # meet the selection rules, write their notes and queue ranked lists.
+      # meet the selection rules, write their notes, give them card photos (their
+      # provider's own; needs BLOB_READ_WRITE_TOKEN) and queue ranked lists.
       - run: npm run pipeline -- tours:import --max 50
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GYG_API_KEY: ${{ secrets.GYG_API_KEY }}
           VIATOR_API_KEY: ${{ secrets.VIATOR_API_KEY }}
           WINALIST_READ_PAGES: ${{ vars.WINALIST_READ_PAGES }}
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+          IMAGES_CONTACT_EMAIL: ${{ vars.IMAGES_CONTACT_EMAIL }}
           PIPELINE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.PIPELINE_SERVICE_ACCOUNT_EMAIL }}
           PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY }}
           PIPELINE_SHEET_ID: ${{ secrets.PIPELINE_SHEET_ID }}
@@ -48,10 +51,12 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL || 'https://frenchvineyard.com' }}
           REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
       # Hotel links the owner pasted into Hotels_Inbox: import, research (town,
-      # classification, address, copy), publish those that pass, queue roundups.
+      # classification, address, copy), publish those that pass, give them card
+      # photos (Commons; needs BLOB_READ_WRITE_TOKEN), queue roundups.
       - run: npm run pipeline -- hotels:import --max 30
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
           PIPELINE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.PIPELINE_SERVICE_ACCOUNT_EMAIL }}
           PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY }}
           PIPELINE_SHEET_ID: ${{ secrets.PIPELINE_SHEET_ID }}

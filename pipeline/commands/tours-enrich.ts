@@ -54,7 +54,7 @@ export const gygApi = (path: string, key: string) =>
   );
 
 /** GET from Viator's Partner API v2 in English. */
-const viatorApi = (path: string, key: string) =>
+export const viatorApi = (path: string, key: string) =>
   getJson(
     `https://api.viator.com/partner${path}`,
     { "exp-api-key": key, accept: "application/json;version=2.0", "accept-language": "en-US" },

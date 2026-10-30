@@ -1,17 +1,21 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/Logo";
-import { ButtonLink } from "@/components/SmartLink";
+import { BookTourButton, type TourTargets } from "@/components/header/BookTourButton";
 import { RegionsMenu, type MenuRegion } from "@/components/header/RegionsMenu";
-import { goHref } from "@/lib/links";
 import { NAV, REGIONS_INDEX_HREF, regionHref } from "@/lib/site";
 
-/** Presentational header; `Header` feeds it published regions from the Sheet. */
+/**
+ * Presentational header; `Header` feeds it published regions from the Sheet,
+ * and the town and article paths that tell "Book a Tour" which region it's in.
+ */
 export function SiteHeader({
   regions,
+  tourTargets = { regionSlugs: regions.map((r) => r.slug), paths: {} },
   sticky = true,
 }: {
   regions: MenuRegion[];
+  tourTargets?: TourTargets;
   sticky?: boolean;
 }) {
   return (
@@ -34,13 +38,7 @@ export function SiteHeader({
           ))}
         </nav>
 
-        <ButtonLink
-          href={goHref("gyg", "home", "header")}
-          size="compact"
-          className="ml-auto shrink-0 lg:ml-2"
-        >
-          Book a Tour
-        </ButtonLink>
+        <BookTourButton targets={tourTargets} className="ml-auto shrink-0 lg:ml-2" />
 
         <details className="group lg:hidden">
           <summary className="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-button [&::-webkit-details-marker]:hidden">

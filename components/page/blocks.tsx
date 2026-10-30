@@ -77,7 +77,7 @@ export function Section({
         {action ? (
           <Link
             href={action.href}
-            className="text-sm font-semibold text-primary underline-offset-4 hover:underline dark:text-accent"
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-primary underline-offset-4 hover:underline dark:text-accent"
           >
             {action.label}
           </Link>

@@ -56,7 +56,7 @@ export default async function ImageCredits() {
                             <a
                               key={page}
                               href={page}
-                              className="block underline underline-offset-2"
+                              className="block py-1 underline underline-offset-2"
                             >
                               {page}
                             </a>

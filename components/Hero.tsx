@@ -18,6 +18,7 @@ export function Hero({
   title,
   standfirst,
   priority = true,
+  creditAtTop = false,
 }: {
   image: HeroImage;
   eyebrow?: string;
@@ -25,6 +26,8 @@ export function Hero({
   standfirst?: string;
   /** The LCP image: load eagerly at high priority. Only the page's first hero. */
   priority?: boolean;
+  /** Put the photo credit in the top corner, when something overlaps the hero's bottom edge. */
+  creditAtTop?: boolean;
 }) {
   return (
     <section className="relative isolate flex min-h-[28rem] items-end overflow-hidden bg-cellar text-chalk sm:min-h-[34rem]">
@@ -54,7 +57,7 @@ export function Hero({
         credit={image.credit}
         license={image.license}
         sourceUrl={image.sourceUrl}
-        className="absolute right-3 bottom-2 max-w-[90%] text-right text-[11px] text-chalk/75"
+        className={`absolute right-3 ${creditAtTop ? "top-2 text-chalk/90 [text-shadow:0_0_3px_#2b2320]" : "bottom-2 text-chalk/75"} max-w-[90%] text-right text-xs`}
       />
     </section>
   );

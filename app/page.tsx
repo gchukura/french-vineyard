@@ -64,6 +64,8 @@ export default async function Home() {
           license: heroCredit?.license,
           sourceUrl: heroCredit?.source_url,
         }}
+        // The region picker overlaps the bottom of this hero, where the credit usually sits.
+        creditAtTop
         eyebrow="An independent travel guide"
         title={configText(d.config, "home_h1") ?? "The wine regions of France, planned properly"}
         standfirst={

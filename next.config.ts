@@ -18,12 +18,14 @@ const nextConfig: NextConfig = {
     inlineCss: true,
   },
   images: {
-    // CLAUDE.md: four fixed widths only. No imageSizes, so every srcset
-    // (thumbnails included) is drawn from these four.
-    deviceSizes: [640, 960, 1280, 1920],
+    // Photos are stored on Vercel Blob already resized to these four widths
+    // (pipeline/media.ts), so lib/image-loader.ts points srcsets straight at
+    // them and Vercel's image optimizer isn't used. CLAUDE.md: four fixed
+    // widths only; no imageSizes, so thumbnails draw from these four too.
+    loader: "custom",
+    loaderFile: "./lib/image-loader.ts",
+    deviceSizes: [640, 1024, 1600, 2400],
     imageSizes: [],
-    formats: ["image/avif", "image/webp"],
-    remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
   },
   turbopack: {
     rules: {

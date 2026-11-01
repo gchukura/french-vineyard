@@ -11,7 +11,7 @@ Colours: chalk #F7F3EC (background), parchment #EFE8DB (surfaces), cellar #2B232
 - Every affiliate link goes through /go/[provider]/[id] and carries rel="sponsored nofollow".
 - Tours come only from links the owner pastes into Tours_Inbox (or rows the owner adds to the Tours tab); the code never finds, adds or chooses a tour on its own. `tours:import` fills those tours in from the provider's API (or, for Winalist when enabled, its pages' schema.org data) and publishes the ones that meet content/selection-rules.md; the rest stay drafts with the reason in notes_flag.
 - Hotels come only from links the owner pastes into Hotels_Inbox (or rows the owner adds); the code never finds or adds a hotel on its own. `hotels:import` fills them in from the hotel's own site and official registers and publishes the ones it can place, classify and describe within the checks.
-- No tracking script loads before consent. Refuse is as easy as Accept.
+- No tracking script loads before consent. Refuse is as easy as Accept. One exception: the Travelpayouts verification script in the root layout's <head>, which loads for everyone because Drive stays off (no tracking, no link rewriting).
 - No images of people drinking, glasses raised or parties. No copy that sells wine.
 - Never generate a photorealistic image of a real, named place.
 - Trailing slashes on all URLs; lowercase ASCII slugs; accented names in headings.

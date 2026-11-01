@@ -41,6 +41,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: CONSENT_BOOT_SCRIPT }} />
+        {/* Travelpayouts site-ownership verification, loaded for every visitor.
+            Drive stays off in the Travelpayouts dashboard, so the script neither
+            tracks visitors nor rewrites links; turning Drive on would need consent. */}
+        <script async src="https://emrldco.com/NTk0MjI2.js?t=594226" data-cmp-ab="2" />
       </head>
       <body className="flex min-h-full flex-col">
         <a

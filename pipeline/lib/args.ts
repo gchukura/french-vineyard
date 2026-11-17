@@ -10,6 +10,7 @@ export const COMMANDS = [
   "images",
   "card-images",
   "indexnow",
+  "gsc",
   "tours:import",
   "tours:check",
   "tours:describe",
@@ -56,6 +57,7 @@ Commands:
   images <n>      hero images for up to n published rows with no hero_image
   card-images <n> card photos for up to n published tours and hotels with no image
   indexnow        submit every sitemap URL to IndexNow (launch day; needs INDEXNOW_KEY)
+  gsc <n>         Search Console queries (last 28 days) -> Queries tab; refresh figures, add up to n new
   tours:import    Tours_Inbox URLs -> Tours rows, then enrich, describe, card photos and queue (the whole flow)
   hotels:import   Hotels_Inbox links -> Hotels rows, then enrich, card photos and queue (the whole flow)
   hotels:enrich   research imported hotels (town, stars, address, copy); publish those that pass

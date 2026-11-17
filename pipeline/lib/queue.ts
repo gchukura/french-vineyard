@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { UsageEntry } from "./cost";
+import { GSC_COLUMNS } from "./gsc";
 import { TARGETS } from "./targets";
 
 export { refreshMonths } from "./targets";
@@ -91,6 +92,8 @@ export const QUERIES_HEADERS = [
   "volume",
   "notes",
   "queued",
+  // Filled by `gsc` from Search Console; see pipeline/lib/gsc.ts.
+  ...GSC_COLUMNS,
 ];
 
 export type CheckOutcome = { stage: Stage; attempts: number; redraft: boolean };

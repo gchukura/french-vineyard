@@ -1,0 +1,40 @@
+name: Search Console queries
+
+on:
+  schedule:
+    - cron: "0 5 * * 1" # 05:00 UTC every Monday, after Sunday's content pipeline
+  workflow_dispatch:
+    inputs:
+      max:
+        description: "Most new queries to add"
+        default: "100"
+
+permissions:
+  contents: read
+
+# Same group as the content pipeline: both write the Sheet as the same
+# service account, and Sheets limits writes per account.
+concurrency:
+  group: content-pipeline
+  cancel-in-progress: false
+
+jobs:
+  queries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # Last 28 days of Search Console queries -> Queries tab. Refreshes figures on
+      # existing rows, adds new queries with 5+ impressions. The service account
+      # must be a user on the Search Console property (Restricted is enough).
+      - run: npm run pipeline -- gsc --max ${{ inputs.max || '100' }}
+        env:
+          PIPELINE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.PIPELINE_SERVICE_ACCOUNT_EMAIL }}
+          PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.PIPELINE_SERVICE_ACCOUNT_PRIVATE_KEY }}
+          PIPELINE_SHEET_ID: ${{ secrets.PIPELINE_SHEET_ID }}
+          GSC_SITE_URL: ${{ vars.GSC_SITE_URL }}
